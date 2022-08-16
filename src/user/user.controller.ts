@@ -3,9 +3,11 @@ import { JwtAuthGuard } from 'src/auth/auth_guards/jwt-auth.guard';
 
 @Controller()
 export class UserController {
-  @UseGuards(JwtAuthGuard)
   @Get('profile')
+  @UseGuards(JwtAuthGuard)
   getProfile(@Request() req) {
+    console.log(req.user);
+
     return req.user;
   }
 }

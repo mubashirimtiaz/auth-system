@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './auth_guards/google-auth.guard';
+import { JwtRefreshAuthGuard } from './auth_guards/jwt-refresh-auth.guard';
 import { LocalAuthGuard } from './auth_guards/local-auth.guard';
 
 @Controller('auth')
@@ -23,6 +24,15 @@ export class AuthController {
   @Post('signup')
   async signup(@Body() body) {
     return this.authService.signup(body);
+  }
+
+  @Post('refresh')
+  @UseGuards(JwtRefreshAuthGuard)
+  refreshAccessToken(@Request() req) {
+    return this.authService.refreshAccessToken({
+      refreshToken: req.body,
+      user: req.user,
+    });
   }
 
   @Get('google')

@@ -1,9 +1,4 @@
-import {
-  ConflictException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -17,14 +12,20 @@ export class AuthService {
   ) {}
 
   async login(user: any) {
-    const token = this.generateJWT({
+    const accessToken = this.getAccessToken({
       email: user.email,
-      id: user.id,
+      sub: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    });
+    const refreshToken = this.getRefreshToken({
+      email: user.email,
+      sub: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
     });
 
-    return token;
+    return { accessToken, refreshToken };
   }
 
   async signup({ email, password, firstName, lastName }) {
@@ -36,25 +37,38 @@ export class AuthService {
       providerName: OAUTH_PROVIDER.EMAIL_PASSWORD,
     });
 
-    const token = this.generateJWT({
+    const accessToken = await this.getAccessToken({
       email: user.email,
-      id: user.id,
+      sub: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
     });
 
-    return token;
+    const refreshToken = await this.getRefreshToken({
+      email: user.email,
+      sub: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    });
+
+    return { accessToken, refreshToken };
   }
 
-  async validateUserWithCredentials(
-    email: string,
-    password: string,
-  ): Promise<any> {
+  async validateUser(payload, strategy: string): Promise<any> {
     const user = await this.prismaService.user.findFirst({
-      where: { email },
+      where: { email: payload.email, id: payload.id },
     });
-    const isValidPassword = await bcrypt.compare(password, user.hash);
-    if (user && isValidPassword) {
+
+    if (user && strategy === 'jwt') {
+      const { hash, ...result } = user;
+      return result;
+    }
+
+    if (
+      user &&
+      strategy === 'local' &&
+      (await bcrypt.compare(payload.password, user.hash))
+    ) {
       const { hash, ...result } = user;
       return result;
     }
@@ -105,7 +119,6 @@ export class AuthService {
         where: { id: user.id },
         data: {
           ...(password && { hash: password }),
-          // ...(picture && { picture }),
           oAuthProviders: {
             create: {
               provider: providerName,
@@ -136,9 +149,27 @@ export class AuthService {
     return newUser;
   }
 
-  private generateJWT(data) {
-    return {
-      access_token: this.jwtService.sign(data),
-    };
+  refreshAccessToken(payload) {
+    const accessToken = this.jwtService.sign(payload.user, {
+      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
+      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
+    });
+    return { accessToken };
+  }
+
+  private getAccessToken(payload) {
+    const accessToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
+      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
+    });
+    return accessToken;
+  }
+
+  private getRefreshToken(payload) {
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_TOKEN_SECRET,
+      expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME,
+    });
+    return refreshToken;
   }
 }
