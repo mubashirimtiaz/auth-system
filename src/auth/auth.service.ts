@@ -1,8 +1,14 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { OAUTH_PROVIDER } from '@prisma/client';
+import { User, UserPayload } from './interface/auth.interface';
+import { SignUpDTO } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -11,24 +17,29 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async login(user: any) {
+  async login(payload: UserPayload) {
     const accessToken = this.getAccessToken({
-      email: user.email,
-      sub: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      email: payload.email,
+      sub: payload.id,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
     });
     const refreshToken = this.getRefreshToken({
-      email: user.email,
-      sub: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      email: payload.email,
+      sub: payload.id,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
     });
 
     return { accessToken, refreshToken };
   }
 
-  async signup({ email, password, firstName, lastName }) {
+  async signup({
+    email,
+    password,
+    firstName,
+    lastName,
+  }: SignUpDTO): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.validateUserWithOAuth({
       email,
       firstName,
@@ -54,25 +65,29 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async validateUser(payload, strategy: string): Promise<any> {
-    const user = await this.prismaService.user.findFirst({
-      where: { email: payload.email, id: payload.id },
-    });
+  async validateUser(payload, strategy: string): Promise<User> {
+    try {
+      const user: User = await this.prismaService.user.findUnique({
+        where: { email: payload.email },
+      });
 
-    if (user && strategy === 'jwt') {
-      const { hash, ...result } = user;
-      return result;
-    }
+      if (user && strategy === 'jwt') {
+        const { hash, ...result } = user;
+        return result;
+      }
 
-    if (
-      user &&
-      strategy === 'local' &&
-      (await bcrypt.compare(payload.password, user.hash))
-    ) {
-      const { hash, ...result } = user;
-      return result;
+      if (
+        user &&
+        strategy === 'local' &&
+        (await bcrypt.compare(payload.password, user.hash))
+      ) {
+        const { hash, ...result } = user;
+        return result;
+      }
+      return null;
+    } catch (error) {
+      throw new InternalServerErrorException();
     }
-    return null;
   }
 
   async validateUserWithOAuth({
@@ -91,82 +106,85 @@ export class AuthService {
     firstName: string;
     picture?: string | null;
     providerName: OAUTH_PROVIDER;
-  }): Promise<any> {
-    const user = await this.prismaService.user.findUnique({
-      where: { email },
-      include: {
-        oAuthProviders: {
-          select: {
-            provider: true,
-            userId: true,
-          },
-        },
-      },
-    });
-
-    if (user) {
-      const providerExists = user.oAuthProviders.find(
-        (elem) => elem.userId === user.id && elem.provider === providerName,
-      );
-
-      if (providerExists) {
-        if (providerName === 'EMAIL_PASSWORD') {
-          throw new ConflictException('User already exists');
-        }
-        return user;
-      }
-      const updatedUser = await this.prismaService.user.update({
-        where: { id: user.id },
-        data: {
-          ...(password && { hash: password }),
+  }): Promise<User> {
+    try {
+      const user: User = await this.prismaService.user.findUnique({
+        where: { email },
+        include: {
           oAuthProviders: {
-            create: {
-              provider: providerName,
-              ...(providerId && { providerId }),
+            select: {
+              provider: true,
+              userId: true,
             },
           },
         },
       });
+      if (user) {
+        const providerExists = user.oAuthProviders.find(
+          (elem) => elem.userId === user.id && elem.provider === providerName,
+        );
 
-      return updatedUser;
+        if (providerExists) {
+          if (providerName === 'EMAIL_PASSWORD') {
+            throw new ConflictException('User already exists');
+          }
+          return user;
+        }
+        const updatedUser = await this.prismaService.user.update({
+          where: { id: user.id },
+          data: {
+            ...(password && { hash: password }),
+            oAuthProviders: {
+              create: {
+                provider: providerName,
+                ...(providerId && { providerId }),
+              },
+            },
+          },
+        });
+
+        return updatedUser;
+      }
+      const newUser = await this.prismaService.user.create({
+        data: {
+          firstName,
+          lastName,
+          email,
+          ...(password && { hash: password }),
+          ...(picture && { picture }),
+        },
+      });
+      await this.prismaService.oAuthProvider.create({
+        data: {
+          userId: newUser.id,
+          provider: providerName,
+          providerId,
+        },
+      });
+      return newUser;
+    } catch (error) {
+      throw new InternalServerErrorException();
     }
-    const newUser = await this.prismaService.user.create({
-      data: {
-        firstName,
-        lastName,
-        email,
-        ...(password && { hash: password }),
-        ...(picture && { picture }),
-      },
-    });
-    await this.prismaService.oAuthProvider.create({
-      data: {
-        userId: newUser.id,
-        provider: providerName,
-        providerId,
-      },
-    });
-    return newUser;
   }
 
-  refreshAccessToken(payload) {
-    const accessToken = this.jwtService.sign(payload.user, {
+  refreshAccessToken(payload): { accessToken: string } {
+    const accessToken: string = this.jwtService.sign(payload.user, {
       secret: process.env.JWT_ACCESS_TOKEN_SECRET,
       expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
     });
     return { accessToken };
   }
 
-  private getAccessToken(payload) {
-    const accessToken = this.jwtService.sign(payload, {
+  private getAccessToken(payload): string {
+    const accessToken: string = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_TOKEN_SECRET,
       expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
     });
     return accessToken;
   }
 
-  private getRefreshToken(payload) {
-    const refreshToken = this.jwtService.sign(payload, {
+  private getRefreshToken(payload): string {
+    const refreshToken: string = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_TOKEN_SECRET,
       expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME,
     });

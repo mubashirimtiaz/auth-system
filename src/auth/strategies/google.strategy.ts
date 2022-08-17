@@ -1,8 +1,14 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { OAUTH_PROVIDER } from '@prisma/client';
+import { Profile } from 'passport';
+import { User } from '../interface/auth.interface';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -18,28 +24,31 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
+    profile: Profile,
     done: VerifyCallback,
-  ): Promise<any> {
+  ): Promise<void> {
     const {
       emails,
       photos,
       id,
       name: { familyName: lastName, givenName: firstName },
     } = profile;
+    try {
+      const user: User = await this.authService.validateUserWithOAuth({
+        email: emails[0].value,
+        providerId: id,
+        lastName,
+        firstName,
+        picture: photos[0].value,
+        providerName: OAUTH_PROVIDER.GOOGLE,
+      });
 
-    const user = await this.authService.validateUserWithOAuth({
-      email: emails[0].value,
-      providerId: id,
-      lastName,
-      firstName,
-      picture: photos[0].value,
-      providerName: OAUTH_PROVIDER.GOOGLE,
-    });
-
-    if (!user) {
-      throw new UnauthorizedException();
+      if (!user) {
+        throw new UnauthorizedException();
+      }
+      done(null, user);
+    } catch (error) {
+      throw new InternalServerErrorException();
     }
-    done(null, user);
   }
 }
