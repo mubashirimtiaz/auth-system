@@ -6,7 +6,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { StrategyRequestHandler } from 'src/interfaces/oauth.global.interface';
+import { StrategyRequestHandler } from 'src/interfaces/auth/auth.global.interface';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './auth_guards/google-auth.guard';
 import { JwtRefreshAuthGuard } from './auth_guards/jwt-refresh-auth.guard';

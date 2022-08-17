@@ -7,8 +7,10 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { OAUTH_PROVIDER } from '@prisma/client';
-import { User, UserPayload } from './interface/auth.interface';
-import { SignUpDTO } from './dto/auth.dto';
+import { JwtTOKEN, User, UserPayload } from './interface/auth.interface';
+import { SignInDTO, SignUpDTO } from './dto/auth.dto';
+import { StrategyType } from './enum/auth.enum';
+import { UserValidationData } from './type/auth.type';
 
 @Injectable()
 export class AuthService {
@@ -65,23 +67,29 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async validateUser(payload, strategy: string): Promise<User> {
+  async validateUser(
+    payload: SignInDTO | JwtTOKEN,
+    strategy: StrategyType,
+  ): Promise<User> {
     try {
       const user: User = await this.prismaService.user.findUnique({
         where: { email: payload.email },
       });
 
-      if (user && strategy === 'jwt') {
-        const { hash, ...result } = user;
+      if (user && strategy === StrategyType.JWT) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { hash: _, ...result } = user;
         return result;
       }
 
       if (
         user &&
-        strategy === 'local' &&
+        'password' in payload &&
+        strategy === StrategyType.LOCAL &&
         (await bcrypt.compare(payload.password, user.hash))
       ) {
-        const { hash, ...result } = user;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { hash: _, ...result } = user;
         return result;
       }
       return null;
@@ -98,15 +106,7 @@ export class AuthService {
     firstName,
     picture,
     providerName,
-  }: {
-    email: string;
-    password?: string | null;
-    providerId?: string | null;
-    lastName: string;
-    firstName: string;
-    picture?: string | null;
-    providerName: OAUTH_PROVIDER;
-  }): Promise<User> {
+  }: UserValidationData): Promise<User> {
     try {
       const user: User = await this.prismaService.user.findUnique({
         where: { email },

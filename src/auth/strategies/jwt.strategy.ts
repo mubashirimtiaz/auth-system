@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { JwtTOKEN, UserPayload } from '../interface/auth.interface';
+import { StrategyType } from '../enum/auth.enum';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -20,7 +21,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   async validate(payload: JwtTOKEN): Promise<UserPayload> {
     try {
-      const user = await this.authService.validateUser(payload, 'jwt');
+      const user = await this.authService.validateUser(
+        payload,
+        StrategyType.JWT,
+      );
 
       if (!user) {
         throw new UnauthorizedException();
