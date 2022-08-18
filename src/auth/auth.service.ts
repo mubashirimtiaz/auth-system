@@ -10,7 +10,10 @@ import { OAUTH_PROVIDER } from '@prisma/client';
 import { JwtTOKEN, User, UserPayload } from './interface/auth.interface';
 import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 import { StrategyType } from './enum/auth.enum';
-import { UserValidationData } from './type/auth.type';
+import { Token, UserValidationData } from './type/auth.type';
+import { apiResponseHandler } from 'src/utils/functions';
+import { ApiResponse } from 'src/interfaces/global.interface';
+import { AUTH_MESSAGE } from './message/auth.message';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +22,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async login(payload: UserPayload) {
+  async login(payload: UserPayload): Promise<ApiResponse<Token>> {
     const accessToken = this.getAccessToken({
       email: payload.email,
       sub: payload.id,
@@ -33,7 +36,14 @@ export class AuthService {
       lastName: payload.lastName,
     });
 
-    return { accessToken, refreshToken };
+    return apiResponseHandler<Token>(
+      true,
+      AUTH_MESSAGE.success.USER_LOGGED_IN,
+      {
+        accessToken,
+        refreshToken,
+      },
+    );
   }
 
   async signup({
@@ -41,7 +51,7 @@ export class AuthService {
     password,
     firstName,
     lastName,
-  }: SignUpDTO): Promise<{ accessToken: string; refreshToken: string }> {
+  }: SignUpDTO): Promise<ApiResponse<Token>> {
     const user = await this.validateUserWithOAuth({
       email,
       firstName,
@@ -64,7 +74,24 @@ export class AuthService {
       lastName: user.lastName,
     });
 
-    return { accessToken, refreshToken };
+    return apiResponseHandler<Token>(true, AUTH_MESSAGE.success.USER_CREATED, {
+      accessToken,
+      refreshToken,
+    });
+  }
+
+  refreshAccessToken(payload: { user: UserPayload }): ApiResponse<Token> {
+    const accessToken: string = this.jwtService.sign(payload.user, {
+      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
+      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
+    });
+    return apiResponseHandler<Token>(
+      true,
+      AUTH_MESSAGE.success.REFRESH_TOKEN_VERIFIED,
+      {
+        accessToken,
+      },
+    );
   }
 
   async validateUser(
@@ -167,15 +194,7 @@ export class AuthService {
     }
   }
 
-  refreshAccessToken(payload): { accessToken: string } {
-    const accessToken: string = this.jwtService.sign(payload.user, {
-      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
-    });
-    return { accessToken };
-  }
-
-  private getAccessToken(payload): string {
+  private getAccessToken(payload: Partial<JwtTOKEN>): string {
     const accessToken: string = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_TOKEN_SECRET,
       expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
@@ -183,7 +202,7 @@ export class AuthService {
     return accessToken;
   }
 
-  private getRefreshToken(payload): string {
+  private getRefreshToken(payload: Partial<JwtTOKEN>): string {
     const refreshToken: string = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_TOKEN_SECRET,
       expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME,

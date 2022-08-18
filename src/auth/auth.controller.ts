@@ -6,7 +6,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { StrategyRequestHandler } from 'src/interfaces/auth/auth.global.interface';
+import { StrategyRequestHandler } from 'src/interfaces/global.interface';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './auth_guards/google-auth.guard';
 import { JwtRefreshAuthGuard } from './auth_guards/jwt-refresh-auth.guard';
@@ -25,9 +25,7 @@ export class AuthController {
   }
 
   @Post('signup')
-  async signup(
-    @Body() body: SignUpDTO,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  async signup(@Body() body: SignUpDTO) {
     return this.authService.signup(body);
   }
 
@@ -35,7 +33,6 @@ export class AuthController {
   @UseGuards(JwtRefreshAuthGuard)
   refreshAccessToken(@Request() req: StrategyRequestHandler) {
     return this.authService.refreshAccessToken({
-      refreshToken: req.body,
       user: req.user,
     });
   }

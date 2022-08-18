@@ -9,3 +9,8 @@ export type UserValidationData = {
   picture?: string | null;
   providerName: OAUTH_PROVIDER;
 };
+
+export type Token = {
+  refreshToken?: string;
+  accessToken: string;
+};
