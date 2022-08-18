@@ -1,7 +1,13 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from '../auth.service';
+import { JwtTOKEN, UserPayload } from '../interface/auth.interface';
+import { StrategyType } from '../enum/auth.enum';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -16,17 +22,24 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  async validate(payload: any) {
-    const user = await this.authService.validateUser(payload, 'jwt');
+  async validate(payload: JwtTOKEN): Promise<UserPayload> {
+    try {
+      const user = await this.authService.validateUser(
+        payload,
+        StrategyType.JWT,
+      );
 
-    if (!user) {
-      throw new UnauthorizedException();
+      if (!user) {
+        throw new UnauthorizedException();
+      }
+      return {
+        email: user?.email,
+        id: user?.id,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException();
     }
-    return {
-      email: user?.email,
-      sub: user?.id,
-      firstName: user?.firstName,
-      lastName: user?.lastName,
-    };
   }
 }
