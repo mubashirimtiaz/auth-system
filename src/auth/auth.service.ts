@@ -11,7 +11,7 @@ import { JwtTOKEN, User, UserPayload } from './interface/auth.interface';
 import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 import { StrategyType } from './enum/auth.enum';
 import { Token, UserValidationData } from './type/auth.type';
-import { apiResponseHandler } from 'src/utils/functions';
+import { ApiSuccessResponse } from 'src/utils/functions';
 import { ApiResponse } from 'src/interfaces/global.interface';
 import { AUTH_MESSAGE } from './message/auth.message';
 
@@ -36,7 +36,7 @@ export class AuthService {
       lastName: payload.lastName,
     });
 
-    return apiResponseHandler<Token>(
+    return ApiSuccessResponse<Token>(
       true,
       AUTH_MESSAGE.success.USER_LOGGED_IN,
       {
@@ -74,7 +74,7 @@ export class AuthService {
       lastName: user.lastName,
     });
 
-    return apiResponseHandler<Token>(true, AUTH_MESSAGE.success.USER_CREATED, {
+    return ApiSuccessResponse<Token>(true, AUTH_MESSAGE.success.USER_CREATED, {
       accessToken,
       refreshToken,
     });
@@ -85,7 +85,7 @@ export class AuthService {
       secret: process.env.JWT_ACCESS_TOKEN_SECRET,
       expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
     });
-    return apiResponseHandler<Token>(
+    return ApiSuccessResponse<Token>(
       true,
       AUTH_MESSAGE.success.REFRESH_TOKEN_VERIFIED,
       {

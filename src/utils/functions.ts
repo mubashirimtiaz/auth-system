@@ -1,6 +1,6 @@
 import { ApiResponse } from 'src/interfaces/global.interface';
 
-export const apiResponseHandler = <T>(
+export const ApiSuccessResponse = <T>(
   success: boolean,
   message: string,
   data?: T,
