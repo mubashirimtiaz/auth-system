@@ -6,5 +6,8 @@ export const AUTH_MESSAGE = {
     REFRESH_TOKEN_VERIFIED: 'Refresh token verified successfully',
   },
   //ERROR
-  error: {},
+  error: {
+    USER_ALREADY_EXISTS: 'User already exists',
+    USER_NOT_FOUND: 'User not found',
+  },
 };

@@ -1,14 +1,15 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import {
+  HttpException,
   Injectable,
-  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { OAUTH_PROVIDER } from '@prisma/client';
 import { Profile } from 'passport';
 import { User } from '../interface/auth.interface';
+import { AUTH_MESSAGE } from '../message/auth.message';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -44,11 +45,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       });
 
       if (!user) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException(AUTH_MESSAGE.error.USER_NOT_FOUND);
       }
       done(null, user);
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new HttpException(error.response, error.status);
     }
   }
 }

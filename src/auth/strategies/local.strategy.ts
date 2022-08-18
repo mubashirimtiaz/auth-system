@@ -1,13 +1,14 @@
 import { Strategy } from 'passport-local';
 import { PassportStrategy } from '@nestjs/passport';
 import {
+  HttpException,
   Injectable,
-  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { User, UserPayload } from '../interface/auth.interface';
 import { StrategyType } from '../enum/auth.enum';
+import { AUTH_MESSAGE } from '../message/auth.message';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
@@ -22,7 +23,7 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
         StrategyType.LOCAL,
       );
       if (!user) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException(AUTH_MESSAGE.error.USER_NOT_FOUND);
       }
 
       return {
@@ -31,8 +32,8 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
         firstName: user.firstName,
         lastName: user.lastName,
       };
-    } catch {
-      throw new InternalServerErrorException();
+    } catch (error) {
+      throw new HttpException(error.response, error.status);
     }
   }
 }

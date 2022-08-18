@@ -153,7 +153,7 @@ export class AuthService {
 
         if (providerExists) {
           if (providerName === 'EMAIL_PASSWORD') {
-            throw new ConflictException('User already exists');
+            throw new ConflictException(AUTH_MESSAGE.error.USER_ALREADY_EXISTS);
           }
           return user;
         }

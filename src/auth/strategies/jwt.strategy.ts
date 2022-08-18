@@ -1,13 +1,14 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import {
+  HttpException,
   Injectable,
-  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { JwtTOKEN, UserPayload } from '../interface/auth.interface';
 import { StrategyType } from '../enum/auth.enum';
+import { AUTH_MESSAGE } from '../message/auth.message';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -27,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       );
 
       if (!user) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException(AUTH_MESSAGE.error.USER_NOT_FOUND);
       }
 
       return {
@@ -37,7 +38,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         lastName: user?.lastName,
       };
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new HttpException(error.response, error.status);
     }
   }
 }
