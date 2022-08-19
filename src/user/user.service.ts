@@ -5,8 +5,13 @@ import { ApiErrorResponse } from 'src/classes/global.class';
 import { ApiResponse } from 'src/interfaces/global.interface';
 import { GLOBAL_MESSAGE } from 'src/messages/global.message';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ApiSuccessResponse, getRequiredProperties } from 'src/utils/functions';
-import { UpdateProfileDTO } from './dto/user.dto';
+import {
+  ApiSuccessResponse,
+  getRequiredProperties,
+  throwApiErrorResponse,
+} from 'src/utils/functions';
+import { UpdatePasswordDTO, UpdateProfileDTO } from './dto/user.dto';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
@@ -18,10 +23,13 @@ export class UserService {
   ): Promise<ApiResponse<UserPayload>> {
     try {
       if (!profile.firstName && !profile.lastName) {
-        throw new ApiErrorResponse(
-          { message: GLOBAL_MESSAGE.error.NO_DATA_FOUND, success: false },
-          HttpStatus.BAD_REQUEST,
-        );
+        throwApiErrorResponse({
+          response: {
+            message: GLOBAL_MESSAGE.error.NO_DATA_FOUND,
+            success: false,
+          },
+          status: HttpStatus.BAD_REQUEST,
+        });
       }
       const user = await this.prismaService.user.update({
         where: { email: payload?.email },
@@ -32,12 +40,14 @@ export class UserService {
         },
       });
       if (!user) {
-        throw new ApiErrorResponse(
-          { message: AUTH_MESSAGE.error.USER_NOT_FOUND, success: false },
-          HttpStatus.UNAUTHORIZED,
-        );
+        throwApiErrorResponse({
+          response: {
+            message: AUTH_MESSAGE.error.USER_NOT_FOUND,
+            success: false,
+          },
+          status: HttpStatus.UNAUTHORIZED,
+        });
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const result = getRequiredProperties(user, [
         'hash',
         'createdAt',
@@ -49,15 +59,66 @@ export class UserService {
         result,
       );
     } catch (error) {
-      throw new ApiErrorResponse(
-        {
-          message:
-            error?.response?.message ||
-            GLOBAL_MESSAGE.error.INTERNAL_SERVER_ERROR,
-          success: error?.response?.success || false,
+      throwApiErrorResponse(error);
+    }
+  }
+
+  async updatePassword(
+    credential: UpdatePasswordDTO,
+    payload: UserPayload,
+  ): Promise<ApiResponse<null>> {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: { email: payload?.email },
+      });
+      if (!user) {
+        throwApiErrorResponse({
+          response: {
+            message: AUTH_MESSAGE.error.USER_NOT_FOUND,
+            success: false,
+          },
+          status: HttpStatus.UNAUTHORIZED,
+        });
+      }
+      return await this.passwordLookup(credential, user);
+    } catch (error) {
+      throwApiErrorResponse(error);
+    }
+  }
+
+  private async passwordLookup(
+    credential: {
+      oldPassword?: string;
+      newPassword: string;
+    },
+    user: { hash: string; email: string },
+  ): Promise<ApiResponse<null>> {
+    try {
+      if (credential?.oldPassword) {
+        if (!(await bcrypt.compare(credential.oldPassword, user.hash))) {
+          throwApiErrorResponse({
+            response: {
+              message: AUTH_MESSAGE.error.USER_INVALID_PASSWORD,
+              success: false,
+            },
+            status: HttpStatus.BAD_REQUEST,
+          });
+        }
+      }
+      await this.prismaService.user.update({
+        where: { email: user?.email },
+        data: {
+          hash: credential.newPassword,
+          updatedAt: new Date(),
         },
-        error?.status || HttpStatus.BAD_REQUEST,
+      });
+
+      return ApiSuccessResponse(
+        true,
+        AUTH_MESSAGE.success.USER_PASSWORD_UPDATED,
       );
+    } catch (error) {
+      throwApiErrorResponse(error);
     }
   }
 }

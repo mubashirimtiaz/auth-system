@@ -6,6 +6,7 @@ import { JwtTOKEN, UserPayload } from '../interface/auth.interface';
 import { StrategyType } from '../enum/auth.enum';
 import { AUTH_MESSAGE } from '../message/auth.message';
 import { ApiErrorResponse } from 'src/classes/global.class';
+import { throwApiErrorResponse } from 'src/utils/functions';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -28,13 +29,13 @@ export class JwtRefreshStrategy extends PassportStrategy(
       );
 
       if (!user) {
-        throw new ApiErrorResponse(
-          {
+        throwApiErrorResponse({
+          response: {
             message: AUTH_MESSAGE.error.USER_NOT_FOUND,
             success: false,
           },
-          HttpStatus.UNAUTHORIZED,
-        );
+          status: HttpStatus.UNAUTHORIZED,
+        });
       }
       return {
         email: user?.email,
@@ -43,12 +44,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
         lastName: user?.lastName,
       };
     } catch (error) {
-      console.log(error);
-
-      throw new ApiErrorResponse(
-        { message: error?.response?.message, success: false },
-        error.status,
-      );
+      throwApiErrorResponse(error);
     }
   }
 }

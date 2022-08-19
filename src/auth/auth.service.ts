@@ -7,11 +7,13 @@ import { JwtTOKEN, User, UserPayload } from './interface/auth.interface';
 import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 import { StrategyType } from './enum/auth.enum';
 import { Token, UserValidationData } from './type/auth.type';
-import { ApiSuccessResponse } from 'src/utils/functions';
+import {
+  ApiSuccessResponse,
+  getRequiredProperties,
+  throwApiErrorResponse,
+} from 'src/utils/functions';
 import { ApiResponse } from 'src/interfaces/global.interface';
 import { AUTH_MESSAGE } from './message/auth.message';
-import { ApiErrorResponse } from 'src/classes/global.class';
-import { GLOBAL_MESSAGE } from 'src/messages/global.message';
 
 @Injectable()
 export class AuthService {
@@ -82,22 +84,14 @@ export class AuthService {
         },
       );
     } catch (error) {
-      throw new ApiErrorResponse(
-        {
-          message:
-            error?.response?.message ||
-            GLOBAL_MESSAGE.error.INTERNAL_SERVER_ERROR,
-          success: error?.response?.success || false,
-        },
-        error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throwApiErrorResponse(error);
     }
   }
 
   async validateUser(
     payload: SignInDTO | JwtTOKEN,
     strategy: StrategyType,
-  ): Promise<User> {
+  ): Promise<UserPayload> {
     try {
       const user: User = await this.prismaService.user.findUnique({
         where: { email: payload.email },
@@ -105,47 +99,47 @@ export class AuthService {
 
       if (user && strategy === StrategyType.JWT) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { hash: _, ...result } = user;
+        const result = getRequiredProperties(user, [
+          'hash',
+          'createdAt',
+          'updatedAt',
+        ]) as UserPayload;
         return result;
       }
 
       if ('password' in payload && strategy === StrategyType.LOCAL) {
         if (!user) {
-          throw new ApiErrorResponse(
-            {
+          throwApiErrorResponse({
+            response: {
               message: AUTH_MESSAGE.error.USER_INVALID_EMAIL,
               success: false,
             },
-            HttpStatus.UNAUTHORIZED,
-          );
+            status: HttpStatus.UNAUTHORIZED,
+          });
         }
         const isValidPassword = await bcrypt.compare(
           payload.password,
           user.hash,
         );
         if (!isValidPassword) {
-          throw new ApiErrorResponse(
-            {
+          throwApiErrorResponse({
+            response: {
               message: AUTH_MESSAGE.error.USER_INVALID_PASSWORD,
               success: false,
             },
-            HttpStatus.UNAUTHORIZED,
-          );
+            status: HttpStatus.UNAUTHORIZED,
+          });
         }
-        const { hash: _, ...result } = user;
+        const result = getRequiredProperties(user, [
+          'hash',
+          'createdAt',
+          'updatedAt',
+        ]) as UserPayload;
         return result;
       }
       return null;
     } catch (error) {
-      throw new ApiErrorResponse(
-        {
-          message:
-            error?.response?.message ||
-            GLOBAL_MESSAGE.error.INTERNAL_SERVER_ERROR,
-          success: error?.response?.success || false,
-        },
-        error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throwApiErrorResponse(error);
     }
   }
 
@@ -193,13 +187,13 @@ export class AuthService {
 
         if (providerExists) {
           if (providerName === 'EMAIL_PASSWORD') {
-            throw new ApiErrorResponse(
-              {
+            throwApiErrorResponse({
+              response: {
                 message: AUTH_MESSAGE.error.USER_ALREADY_EXISTS,
                 success: false,
               },
-              HttpStatus.CONFLICT,
-            );
+              status: HttpStatus.CONFLICT,
+            });
           }
           return user;
         }
@@ -237,15 +231,7 @@ export class AuthService {
       });
       return newUser;
     } catch (error) {
-      throw new ApiErrorResponse(
-        {
-          message:
-            error?.response?.message ||
-            GLOBAL_MESSAGE.error.INTERNAL_SERVER_ERROR,
-          success: error?.response?.success || false,
-        },
-        error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throwApiErrorResponse(error);
     }
   }
 
