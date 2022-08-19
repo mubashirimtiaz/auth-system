@@ -8,6 +8,9 @@ export interface UserPayload {
   email: string;
   firstName: string;
   lastName: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  picture?: string | null;
 }
 
 export interface JwtTOKEN extends UserPayload {
