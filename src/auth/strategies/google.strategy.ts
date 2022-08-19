@@ -1,8 +1,12 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { OAUTH_PROVIDER } from '@prisma/client';
+import { Profile } from 'passport';
+import { User } from '../interface/auth.interface';
+import { AUTH_MESSAGE } from '../message/auth.message';
+import { ApiErrorResponse } from 'src/classes/global.class';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -18,28 +22,46 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
+    profile: Profile,
     done: VerifyCallback,
-  ): Promise<any> {
+  ): Promise<void> {
     const {
       emails,
       photos,
       id,
       name: { familyName: lastName, givenName: firstName },
     } = profile;
+    try {
+      let user = await this.authService.validateUserWithOAuth({
+        email: emails[0].value,
+        providerId: id,
+        lastName,
+        firstName,
+        picture: photos[0].value,
+        providerName: OAUTH_PROVIDER.GOOGLE,
+      });
 
-    const user = await this.authService.validateUserWithOAuth({
-      email: emails[0].value,
-      providerId: id,
-      lastName,
-      firstName,
-      picture: photos[0].value,
-      providerName: OAUTH_PROVIDER.GOOGLE,
-    });
-
-    if (!user) {
-      throw new UnauthorizedException();
+      if (!user) {
+        throw new ApiErrorResponse(
+          {
+            message: AUTH_MESSAGE.error.USER_NOT_FOUND,
+            success: false,
+          },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      user = {
+        email: user?.email,
+        id: user?.id,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+      };
+      done(null, user);
+    } catch (error) {
+      throw new ApiErrorResponse(
+        { message: error?.response?.message, success: false },
+        error.status,
+      );
     }
-    done(null, user);
   }
 }
