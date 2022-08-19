@@ -1,4 +1,7 @@
+import { HttpStatus } from '@nestjs/common';
+import { ApiErrorResponse } from 'src/classes/global.class';
 import { ApiResponse } from 'src/interfaces/global.interface';
+import { GLOBAL_MESSAGE } from 'src/messages/global.message';
 
 export const ApiSuccessResponse = <T>(
   success: boolean,
@@ -18,4 +21,18 @@ export const getRequiredProperties = (
 ) => {
   excludedProp.forEach((prop) => delete payload[prop]);
   return payload;
+};
+
+export const throwApiErrorResponse = <T>(error: {
+  response: ApiResponse<T>;
+  status: HttpStatus;
+}) => {
+  throw new ApiErrorResponse(
+    {
+      message:
+        error?.response?.message || GLOBAL_MESSAGE.error.INTERNAL_SERVER_ERROR,
+      success: error?.response?.success || false,
+    },
+    error?.status || HttpStatus.BAD_REQUEST,
+  );
 };
