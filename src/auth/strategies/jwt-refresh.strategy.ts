@@ -1,13 +1,11 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import {
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { JwtTOKEN, UserPayload } from '../interface/auth.interface';
 import { StrategyType } from '../enum/auth.enum';
+import { AUTH_MESSAGE } from '../message/auth.message';
+import { ApiErrorResponse } from 'src/classes/global.class';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -16,7 +14,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
 ) {
   constructor(private readonly authService: AuthService) {
     super({
-      jwtFromRequest: ExtractJwt.fromBodyField('refresh_token'),
+      jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_REFRESH_TOKEN_SECRET,
     });
@@ -30,7 +28,13 @@ export class JwtRefreshStrategy extends PassportStrategy(
       );
 
       if (!user) {
-        throw new UnauthorizedException();
+        throw new ApiErrorResponse(
+          {
+            message: AUTH_MESSAGE.error.USER_NOT_FOUND,
+            success: false,
+          },
+          HttpStatus.UNAUTHORIZED,
+        );
       }
       return {
         email: user?.email,
@@ -39,7 +43,12 @@ export class JwtRefreshStrategy extends PassportStrategy(
         lastName: user?.lastName,
       };
     } catch (error) {
-      throw new InternalServerErrorException();
+      console.log(error);
+
+      throw new ApiErrorResponse(
+        { message: error?.response?.message, success: false },
+        error.status,
+      );
     }
   }
 }

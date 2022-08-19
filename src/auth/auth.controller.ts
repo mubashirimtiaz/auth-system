@@ -17,7 +17,7 @@ import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Post('login')
+  @Post('signin')
   @UseGuards(LocalAuthGuard)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async login(@Request() req: StrategyRequestHandler, @Body() _: SignInDTO) {

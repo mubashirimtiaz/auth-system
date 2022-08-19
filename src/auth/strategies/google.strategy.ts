@@ -1,14 +1,12 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
-import {
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { OAUTH_PROVIDER } from '@prisma/client';
 import { Profile } from 'passport';
 import { User } from '../interface/auth.interface';
+import { AUTH_MESSAGE } from '../message/auth.message';
+import { ApiErrorResponse } from 'src/classes/global.class';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -34,7 +32,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       name: { familyName: lastName, givenName: firstName },
     } = profile;
     try {
-      const user: User = await this.authService.validateUserWithOAuth({
+      let user = await this.authService.validateUserWithOAuth({
         email: emails[0].value,
         providerId: id,
         lastName,
@@ -44,11 +42,26 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       });
 
       if (!user) {
-        throw new UnauthorizedException();
+        throw new ApiErrorResponse(
+          {
+            message: AUTH_MESSAGE.error.USER_NOT_FOUND,
+            success: false,
+          },
+          HttpStatus.UNAUTHORIZED,
+        );
       }
+      user = {
+        email: user?.email,
+        id: user?.id,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+      };
       done(null, user);
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new ApiErrorResponse(
+        { message: error?.response?.message, success: false },
+        error.status,
+      );
     }
   }
 }
