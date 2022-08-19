@@ -207,6 +207,7 @@ export class AuthService {
           where: { id: user.id },
           data: {
             ...(password && { hash: password }),
+            updatedAt: new Date(),
             oAuthProviders: {
               create: {
                 provider: providerName,
