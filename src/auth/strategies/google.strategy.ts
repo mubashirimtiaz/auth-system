@@ -4,9 +4,8 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { OAUTH_PROVIDER } from '@prisma/client';
 import { Profile } from 'passport';
-import { User } from '../interface/auth.interface';
 import { AUTH_MESSAGE } from '../message/auth.message';
-import { ApiErrorResponse } from 'src/classes/global.class';
+import { throwApiErrorResponse } from 'src/utils/functions';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -14,7 +13,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: 'http://localhost:3000/auth/google/redirect',
+      callbackURL: 'http://localhost:3000/v1/api/auth/google/redirect',
       scope: ['email', 'profile'],
     });
   }
@@ -42,13 +41,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       });
 
       if (!user) {
-        throw new ApiErrorResponse(
-          {
+        throwApiErrorResponse({
+          response: {
             message: AUTH_MESSAGE.error.USER_NOT_FOUND,
             success: false,
           },
-          HttpStatus.UNAUTHORIZED,
-        );
+          status: HttpStatus.UNAUTHORIZED,
+        });
       }
       user = {
         email: user?.email,
@@ -58,10 +57,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       };
       done(null, user);
     } catch (error) {
-      throw new ApiErrorResponse(
-        { message: error?.response?.message, success: false },
-        error.status,
-      );
+      throwApiErrorResponse(error);
     }
   }
 }
