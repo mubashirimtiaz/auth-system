@@ -32,7 +32,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       name: { familyName: lastName, givenName: firstName },
     } = profile;
     try {
-      const user: User = await this.authService.validateUserWithOAuth({
+      let user = await this.authService.validateUserWithOAuth({
         email: emails[0].value,
         providerId: id,
         lastName,
@@ -50,6 +50,12 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
           HttpStatus.UNAUTHORIZED,
         );
       }
+      user = {
+        email: user?.email,
+        id: user?.id,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+      };
       done(null, user);
     } catch (error) {
       throw new ApiErrorResponse(

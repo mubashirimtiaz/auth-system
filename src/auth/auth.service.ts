@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -14,6 +10,8 @@ import { Token, UserValidationData } from './type/auth.type';
 import { ApiSuccessResponse } from 'src/utils/functions';
 import { ApiResponse } from 'src/interfaces/global.interface';
 import { AUTH_MESSAGE } from './message/auth.message';
+import { ApiErrorResponse } from 'src/classes/global.class';
+import { GLOBAL_MESSAGE } from 'src/messages/global.message';
 
 @Injectable()
 export class AuthService {
@@ -52,46 +50,48 @@ export class AuthService {
     firstName,
     lastName,
   }: SignUpDTO): Promise<ApiResponse<Token>> {
-    const user = await this.validateUserWithOAuth({
-      email,
-      firstName,
-      lastName,
-      password,
-      providerName: OAUTH_PROVIDER.EMAIL_PASSWORD,
-    });
+    try {
+      const user = await this.validateUserWithOAuth({
+        email,
+        firstName,
+        lastName,
+        password,
+        providerName: OAUTH_PROVIDER.EMAIL_PASSWORD,
+      });
 
-    const accessToken = await this.getAccessToken({
-      email: user.email,
-      sub: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    });
+      const accessToken = await this.getAccessToken({
+        email: user.email,
+        sub: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
 
-    const refreshToken = await this.getRefreshToken({
-      email: user.email,
-      sub: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    });
+      const refreshToken = await this.getRefreshToken({
+        email: user.email,
+        sub: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
 
-    return ApiSuccessResponse<Token>(true, AUTH_MESSAGE.success.USER_CREATED, {
-      accessToken,
-      refreshToken,
-    });
-  }
-
-  refreshAccessToken(payload: { user: UserPayload }): ApiResponse<Token> {
-    const accessToken: string = this.jwtService.sign(payload.user, {
-      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
-    });
-    return ApiSuccessResponse<Token>(
-      true,
-      AUTH_MESSAGE.success.REFRESH_TOKEN_VERIFIED,
-      {
-        accessToken,
-      },
-    );
+      return ApiSuccessResponse<Token>(
+        true,
+        AUTH_MESSAGE.success.USER_CREATED,
+        {
+          accessToken,
+          refreshToken,
+        },
+      );
+    } catch (error) {
+      throw new ApiErrorResponse(
+        {
+          message:
+            error?.response?.message ||
+            GLOBAL_MESSAGE.error.INTERNAL_SERVER_ERROR,
+          success: error?.response?.success || false,
+        },
+        error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async validateUser(
@@ -109,20 +109,60 @@ export class AuthService {
         return result;
       }
 
-      if (
-        user &&
-        'password' in payload &&
-        strategy === StrategyType.LOCAL &&
-        (await bcrypt.compare(payload.password, user.hash))
-      ) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      if ('password' in payload && strategy === StrategyType.LOCAL) {
+        if (!user) {
+          throw new ApiErrorResponse(
+            {
+              message: AUTH_MESSAGE.error.USER_INVALID_EMAIL,
+              success: false,
+            },
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
+        const isValidPassword = await bcrypt.compare(
+          payload.password,
+          user.hash,
+        );
+        if (!isValidPassword) {
+          throw new ApiErrorResponse(
+            {
+              message: AUTH_MESSAGE.error.USER_INVALID_PASSWORD,
+              success: false,
+            },
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
         const { hash: _, ...result } = user;
         return result;
       }
       return null;
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new ApiErrorResponse(
+        {
+          message:
+            error?.response?.message ||
+            GLOBAL_MESSAGE.error.INTERNAL_SERVER_ERROR,
+          success: error?.response?.success || false,
+        },
+        error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
+  }
+
+  refreshAccessToken(payload: { user: UserPayload }): ApiResponse<Token> {
+    console.log(payload);
+
+    const accessToken: string = this.jwtService.sign(payload.user, {
+      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
+      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
+    });
+    return ApiSuccessResponse<Token>(
+      true,
+      AUTH_MESSAGE.success.REFRESH_TOKEN_VERIFIED,
+      {
+        accessToken,
+      },
+    );
   }
 
   async validateUserWithOAuth({
@@ -153,7 +193,13 @@ export class AuthService {
 
         if (providerExists) {
           if (providerName === 'EMAIL_PASSWORD') {
-            throw new ConflictException(AUTH_MESSAGE.error.USER_ALREADY_EXISTS);
+            throw new ApiErrorResponse(
+              {
+                message: AUTH_MESSAGE.error.USER_ALREADY_EXISTS,
+                success: false,
+              },
+              HttpStatus.CONFLICT,
+            );
           }
           return user;
         }
@@ -190,7 +236,15 @@ export class AuthService {
       });
       return newUser;
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new ApiErrorResponse(
+        {
+          message:
+            error?.response?.message ||
+            GLOBAL_MESSAGE.error.INTERNAL_SERVER_ERROR,
+          success: error?.response?.success || false,
+        },
+        error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 

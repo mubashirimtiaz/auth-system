@@ -14,7 +14,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
 ) {
   constructor(private readonly authService: AuthService) {
     super({
-      jwtFromRequest: ExtractJwt.fromBodyField('refresh_token'),
+      jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_REFRESH_TOKEN_SECRET,
     });
@@ -43,6 +43,8 @@ export class JwtRefreshStrategy extends PassportStrategy(
         lastName: user?.lastName,
       };
     } catch (error) {
+      console.log(error);
+
       throw new ApiErrorResponse(
         { message: error?.response?.message, success: false },
         error.status,
