@@ -28,6 +28,7 @@ export class UserService {
         data: {
           ...(profile.firstName && { firstName: profile.firstName }),
           ...(profile.lastName && { lastName: profile.lastName }),
+          updatedAt: new Date(),
         },
       });
       if (!user) {
