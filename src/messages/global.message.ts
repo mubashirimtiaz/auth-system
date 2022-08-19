@@ -4,5 +4,6 @@ export const GLOBAL_MESSAGE = {
   //ERROR
   error: {
     INTERNAL_SERVER_ERROR: 'Internal server error',
+    NO_DATA_FOUND: 'No data found',
   },
 };

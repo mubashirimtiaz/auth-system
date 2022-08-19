@@ -11,3 +11,11 @@ export const ApiSuccessResponse = <T>(
     ...(data && { data }),
   };
 };
+
+export const getRequiredProperties = (
+  payload: { [key: string]: any },
+  excludedProp: string[],
+) => {
+  excludedProp.forEach((prop) => delete payload[prop]);
+  return payload;
+};
