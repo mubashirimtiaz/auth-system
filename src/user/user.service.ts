@@ -10,12 +10,22 @@ import {
   getRequiredProperties,
   throwApiErrorResponse,
 } from 'src/utils/functions';
-import { UpdatePasswordDTO, UpdateProfileDTO } from './dto/user.dto';
+import {
+  ForgetPasswordDTO,
+  UpdatePasswordDTO,
+  UpdateProfileDTO,
+} from './dto/user.dto';
 import * as bcrypt from 'bcryptjs';
+import { MailService } from 'src/mail/mail.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly mailService: MailService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async updateProfile(
     profile: UpdateProfileDTO,
@@ -81,6 +91,55 @@ export class UserService {
         });
       }
       return await this.passwordLookup(credential, user);
+    } catch (error) {
+      throwApiErrorResponse(error);
+    }
+  }
+
+  async forgetPassword(payload: ForgetPasswordDTO): Promise<ApiResponse<null>> {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: { email: payload.email },
+        include: {
+          oAuthProviders: {
+            take: 1,
+            select: {
+              provider: true,
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throwApiErrorResponse({
+          response: {
+            message: AUTH_MESSAGE.error.USER_INVALID_EMAIL,
+            success: false,
+          },
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+      if (!user?.hash) {
+        throwApiErrorResponse({
+          response: {
+            message: AUTH_MESSAGE.error.USER_MISSING_PASSWORD,
+            success: false,
+            data: user?.oAuthProviders?.[0],
+          },
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      const token = this.jwtService.sign(payload, {
+        secret: process.env.JWT_FORGET_PASSWORD_SECRET,
+        expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
+      });
+
+      await this.mailService.sendMail(
+        { email: user?.email, firstName: user?.firstName },
+        token,
+      );
+      return ApiSuccessResponse(true, AUTH_MESSAGE.success.EMAIL_SENT);
     } catch (error) {
       throwApiErrorResponse(error);
     }
