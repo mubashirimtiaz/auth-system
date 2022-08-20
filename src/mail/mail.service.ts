@@ -5,17 +5,12 @@ import { Injectable } from '@nestjs/common';
 export class MailService {
   constructor(private mailerService: MailerService) {}
 
-  async sendMail(user, token: string) {
-    const url = `http://localhost:3000/v1/api/user/forget-password?token=${token}`;
-
+  async sendMail(email: string, context: { [key: string]: string | number }) {
     await this.mailerService.sendMail({
-      to: user.email,
+      to: email,
       subject: 'FUMA! Forget your password?',
       template: './forget-password',
-      context: {
-        name: user.firstName,
-        url,
-      },
+      context,
     });
   }
 }

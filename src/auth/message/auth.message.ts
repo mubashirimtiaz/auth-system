@@ -18,6 +18,7 @@ export const AUTH_MESSAGE = {
     AUTH_TOKEN_MISSING: 'Missing authorization token',
     AUTH_TOKEN_EXPIRED: 'Expired token',
     AUTH_TOKEN_INVALID: 'Invalid Token',
+    USER_SAME_PASSWORD: 'New password is same as old password',
     USER_MISSING_PASSWORD:
       "You don't have a password. Please sign in with your provider",
   },
