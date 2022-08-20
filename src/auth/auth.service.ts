@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { OAUTH_PROVIDER } from '@prisma/client';
-import { JwtTOKEN, User, UserPayload } from './interface/auth.interface';
+import { JwtTOKEN, User } from './interface/auth.interface';
 import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 import { StrategyType } from './enum/auth.enum';
 import { Token, UserValidationData } from './type/auth.type';
@@ -22,7 +22,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async login(payload: UserPayload): Promise<ApiResponse<Token>> {
+  async login(payload: User): Promise<ApiResponse<Token>> {
     const accessToken = this.getAccessToken({
       email: payload.email,
       sub: payload.id,
@@ -91,7 +91,7 @@ export class AuthService {
   async validateUser(
     payload: SignInDTO | JwtTOKEN,
     strategy: StrategyType,
-  ): Promise<UserPayload> {
+  ): Promise<User> {
     try {
       const user: User = await this.prismaService.user.findUnique({
         where: { email: payload.email },
@@ -99,12 +99,7 @@ export class AuthService {
 
       if (user && strategy === StrategyType.JWT) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result = getRequiredProperties(user, [
-          'hash',
-          'createdAt',
-          'updatedAt',
-        ]) as UserPayload;
-        return result;
+        return user;
       }
 
       if ('password' in payload && strategy === StrategyType.LOCAL) {
@@ -130,12 +125,7 @@ export class AuthService {
             status: HttpStatus.UNAUTHORIZED,
           });
         }
-        const result = getRequiredProperties(user, [
-          'hash',
-          'createdAt',
-          'updatedAt',
-        ]) as UserPayload;
-        return result;
+        return user;
       }
       return null;
     } catch (error) {
@@ -143,12 +133,12 @@ export class AuthService {
     }
   }
 
-  refreshAccessToken(payload: { user: UserPayload }): ApiResponse<Token> {
-    console.log(payload);
-
-    const accessToken: string = this.jwtService.sign(payload.user, {
-      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-      expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
+  refreshAccessToken(user: User): ApiResponse<Token> {
+    const accessToken = this.getAccessToken({
+      email: user.email,
+      sub: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
     });
     return ApiSuccessResponse<Token>(
       true,

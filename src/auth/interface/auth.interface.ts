@@ -11,13 +11,16 @@ export interface UserPayload {
   createdAt?: Date;
   updatedAt?: Date;
   picture?: string | null;
+  hash?: string | null;
 }
 
-export interface JwtTOKEN extends UserPayload {
+export interface JwtTOKEN {
   iat: number;
   exp: number;
-  id: undefined | null;
   sub: string;
+  email: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface User extends Partial<UserModel> {

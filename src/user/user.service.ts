@@ -1,7 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { UserPayload } from 'src/auth/interface/auth.interface';
+import { User } from 'src/auth/interface/auth.interface';
 import { AUTH_MESSAGE } from 'src/auth/message/auth.message';
-import { ApiErrorResponse } from 'src/classes/global.class';
 import { ApiResponse } from 'src/interfaces/global.interface';
 import { GLOBAL_MESSAGE } from 'src/messages/global.message';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -12,6 +11,7 @@ import {
 } from 'src/utils/functions';
 import {
   ForgetPasswordDTO,
+  UpdateForgetPasswordDTO,
   UpdatePasswordDTO,
   UpdateProfileDTO,
 } from './dto/user.dto';
@@ -29,8 +29,8 @@ export class UserService {
 
   async updateProfile(
     profile: UpdateProfileDTO,
-    payload: UserPayload,
-  ): Promise<ApiResponse<UserPayload>> {
+    payload: User,
+  ): Promise<ApiResponse<User>> {
     try {
       if (!profile.firstName && !profile.lastName) {
         throwApiErrorResponse({
@@ -62,8 +62,8 @@ export class UserService {
         'hash',
         'createdAt',
         'updatedAt',
-      ]) as UserPayload;
-      return ApiSuccessResponse<UserPayload>(
+      ]) as User;
+      return ApiSuccessResponse<User>(
         true,
         AUTH_MESSAGE.success.USER_UPDATED,
         result,
@@ -75,21 +75,9 @@ export class UserService {
 
   async updatePassword(
     credential: UpdatePasswordDTO,
-    payload: UserPayload,
+    user: User,
   ): Promise<ApiResponse<null>> {
     try {
-      const user = await this.prismaService.user.findUnique({
-        where: { email: payload?.email },
-      });
-      if (!user) {
-        throwApiErrorResponse({
-          response: {
-            message: AUTH_MESSAGE.error.USER_NOT_FOUND,
-            success: false,
-          },
-          status: HttpStatus.UNAUTHORIZED,
-        });
-      }
       return await this.passwordLookup(credential, user);
     } catch (error) {
       throwApiErrorResponse(error);
@@ -102,7 +90,6 @@ export class UserService {
         where: { email: payload.email },
         include: {
           oAuthProviders: {
-            take: 1,
             select: {
               provider: true,
             },
@@ -124,7 +111,7 @@ export class UserService {
           response: {
             message: AUTH_MESSAGE.error.USER_MISSING_PASSWORD,
             success: false,
-            data: user?.oAuthProviders?.[0],
+            data: user?.oAuthProviders,
           },
           status: HttpStatus.BAD_REQUEST,
         });
@@ -134,12 +121,20 @@ export class UserService {
         secret: process.env.JWT_FORGET_PASSWORD_SECRET,
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
-
-      await this.mailService.sendMail(
-        { email: user?.email, firstName: user?.firstName },
-        token,
-      );
+      const url = `http://localhost:3000/v1/api/user/${user?.id}/forget-password?token=${token}`;
+      await this.mailService.sendMail(user?.email, {
+        url,
+        name: user?.firstName,
+      });
       return ApiSuccessResponse(true, AUTH_MESSAGE.success.EMAIL_SENT);
+    } catch (error) {
+      throwApiErrorResponse(error);
+    }
+  }
+
+  async updateForgetPassword(payload: UpdateForgetPasswordDTO, user) {
+    try {
+      return await this.passwordLookup(payload, user);
     } catch (error) {
       throwApiErrorResponse(error);
     }
@@ -150,7 +145,7 @@ export class UserService {
       oldPassword?: string;
       newPassword: string;
     },
-    user: { hash: string; email: string },
+    user: User,
   ): Promise<ApiResponse<null>> {
     try {
       if (credential?.oldPassword) {
@@ -164,6 +159,17 @@ export class UserService {
           });
         }
       }
+
+      if (await bcrypt.compare(credential.newPassword, user.hash)) {
+        throwApiErrorResponse({
+          response: {
+            message: AUTH_MESSAGE.error.USER_SAME_PASSWORD,
+            success: false,
+          },
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+
       await this.prismaService.user.update({
         where: { email: user?.email },
         data: {
