@@ -11,7 +11,8 @@ import { AuthService } from 'src/auth/auth.service';
 import { StrategyType } from 'src/auth/enum/auth.enum';
 import { JwtTOKEN } from 'src/auth/interface/auth.interface';
 import { AUTH_MESSAGE } from 'src/auth/message/auth.message';
-import { throwApiErrorResponse } from 'src/utils/functions';
+import { throwApiErrorResponse } from 'src/common/functions';
+import { GLOBAL_MESSAGE } from 'src/common/messages';
 
 @Injectable()
 export class ForgetPasswordInterceptor implements NestInterceptor {
@@ -43,15 +44,6 @@ export class ForgetPasswordInterceptor implements NestInterceptor {
         StrategyType.JWT,
       );
 
-      if (!user) {
-        throwApiErrorResponse({
-          response: {
-            message: AUTH_MESSAGE.error.AUTH_TOKEN_INVALID,
-            success: false,
-          },
-          status: HttpStatus.BAD_REQUEST,
-        });
-      }
       await this.jwtService.verify(token, {
         ignoreExpiration: false,
         secret: process.env.JWT_FORGET_PASSWORD_SECRET + user.hash,

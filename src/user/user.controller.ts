@@ -7,9 +7,9 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/auth_guards/jwt-auth.guard';
-import { StrategyRequestHandler } from 'src/interfaces/global.interface';
-import { getRequiredProperties } from 'src/utils/functions';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { StrategyRequestHandler } from 'src/common/interfaces';
+import { getRequiredProperties } from 'src/common/functions';
 import {
   ForgetPasswordDTO,
   UpdateForgetPasswordDTO,

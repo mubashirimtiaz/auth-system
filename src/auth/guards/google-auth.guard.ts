@@ -1,6 +1,6 @@
 import { ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiErrorResponse } from 'src/utils/classes';
+import { ApiErrorResponse } from 'src/common/classes';
 import { AUTH_MESSAGE } from '../message/auth.message';
 
 @Injectable()

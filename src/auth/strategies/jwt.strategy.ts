@@ -5,7 +5,7 @@ import { AuthService } from '../auth.service';
 import { JwtTOKEN, User } from '../interface/auth.interface';
 import { StrategyType } from '../enum/auth.enum';
 import { AUTH_MESSAGE } from '../message/auth.message';
-import { throwApiErrorResponse } from 'src/utils/functions';
+import { throwApiErrorResponse } from 'src/common/functions';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -33,6 +33,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
           status: HttpStatus.UNAUTHORIZED,
         });
       }
+      console.log(user);
 
       return user;
     } catch (error) {

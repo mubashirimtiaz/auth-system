@@ -1,14 +1,14 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { User } from 'src/auth/interface/auth.interface';
 import { AUTH_MESSAGE } from 'src/auth/message/auth.message';
-import { ApiResponse } from 'src/interfaces/global.interface';
-import { GLOBAL_MESSAGE } from 'src/messages/global.message';
+import { ApiResponse } from 'src/common/interfaces';
+import { GLOBAL_MESSAGE } from 'src/common/messages';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   ApiSuccessResponse,
   getRequiredProperties,
   throwApiErrorResponse,
-} from 'src/utils/functions';
+} from 'src/common/functions';
 import {
   ForgetPasswordDTO,
   UpdateForgetPasswordDTO,
@@ -58,11 +58,7 @@ export class UserService {
           status: HttpStatus.UNAUTHORIZED,
         });
       }
-      const result = getRequiredProperties(user, [
-        'hash',
-        'createdAt',
-        'updatedAt',
-      ]) as User;
+      const result = getRequiredProperties(user, ['hash']) as User;
       return ApiSuccessResponse<User>(
         true,
         AUTH_MESSAGE.success.USER_UPDATED,
