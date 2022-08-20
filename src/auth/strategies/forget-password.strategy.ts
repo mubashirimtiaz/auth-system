@@ -5,7 +5,7 @@ import { AuthService } from '../auth.service';
 import { JwtTOKEN, User } from '../interface/auth.interface';
 import { StrategyType } from '../enum/auth.enum';
 import { AUTH_MESSAGE } from '../message/auth.message';
-import { throwApiErrorResponse } from 'src/utils/functions';
+import { throwApiErrorResponse } from 'src/common/functions';
 
 @Injectable()
 export class JwtForgetPasswordStrategy extends PassportStrategy(

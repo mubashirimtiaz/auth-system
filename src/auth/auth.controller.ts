@@ -6,11 +6,11 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { StrategyRequestHandler } from 'src/interfaces/global.interface';
+import { StrategyRequestHandler } from 'src/common/interfaces';
 import { AuthService } from './auth.service';
-import { GoogleAuthGuard } from './auth_guards/google-auth.guard';
-import { JwtRefreshAuthGuard } from './auth_guards/jwt-refresh-auth.guard';
-import { LocalAuthGuard } from './auth_guards/local-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { JwtRefreshAuthGuard } from './guards/jwt-refresh-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 
 @Controller('auth')

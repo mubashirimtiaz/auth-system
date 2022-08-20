@@ -1,24 +1,16 @@
 import { ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiErrorResponse } from 'src/classes/global.class';
-import { throwApiErrorResponse } from 'src/utils/functions';
+import { ApiErrorResponse } from 'src/common/classes';
 import { AUTH_MESSAGE } from '../message/auth.message';
 
 @Injectable()
-export class LocalAuthGuard extends AuthGuard('local') {
+export class GoogleAuthGuard extends AuthGuard('google') {
   canActivate(context: ExecutionContext) {
     return super.canActivate(context);
   }
+
   handleRequest(error, user, info) {
-    if (info?.message === 'Missing credentials') {
-      throwApiErrorResponse({
-        response: {
-          message: AUTH_MESSAGE.error.USER_MISSING_CREDENTIALS,
-          success: false,
-        },
-        status: HttpStatus.UNAUTHORIZED,
-      });
-    }
+    console.log('from-google', error, user, info);
 
     // You can throw an exception based on either "info" or "err" arguments
     if (error || !user) {

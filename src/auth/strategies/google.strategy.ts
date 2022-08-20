@@ -5,7 +5,7 @@ import { AuthService } from '../auth.service';
 import { OAUTH_PROVIDER } from '@prisma/client';
 import { Profile } from 'passport';
 import { AUTH_MESSAGE } from '../message/auth.message';
-import { throwApiErrorResponse } from 'src/utils/functions';
+import { throwApiErrorResponse } from 'src/common/functions';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {

@@ -9,10 +9,9 @@ import { StrategyType } from './enum/auth.enum';
 import { Token, UserValidationData } from './type/auth.type';
 import {
   ApiSuccessResponse,
-  getRequiredProperties,
   throwApiErrorResponse,
-} from 'src/utils/functions';
-import { ApiResponse } from 'src/interfaces/global.interface';
+} from 'src/common/functions';
+import { ApiResponse } from 'src/common/interfaces';
 import { AUTH_MESSAGE } from './message/auth.message';
 
 @Injectable()

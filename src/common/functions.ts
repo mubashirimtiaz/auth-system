@@ -1,7 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
-import { ApiErrorResponse } from 'src/classes/global.class';
-import { ApiResponse } from 'src/interfaces/global.interface';
-import { GLOBAL_MESSAGE } from 'src/messages/global.message';
+import { ApiErrorResponse } from 'src/common/classes';
+import { ApiResponse } from 'src/common/interfaces';
+import { GLOBAL_MESSAGE } from 'src/common/messages';
 
 export const ApiSuccessResponse = <T>(
   success: boolean,
