@@ -1,14 +1,14 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { User } from 'src/auth/interface/auth.interface';
 import { AUTH_MESSAGE } from 'src/auth/message/auth.message';
-import { ApiResponse } from 'src/interfaces/global.interface';
-import { GLOBAL_MESSAGE } from 'src/messages/global.message';
+import { ApiResponse } from 'src/common/interfaces';
+import { GLOBAL_MESSAGE } from 'src/common/messages';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   ApiSuccessResponse,
   getRequiredProperties,
   throwApiErrorResponse,
-} from 'src/utils/functions';
+} from 'src/common/functions';
 import {
   ForgetPasswordDTO,
   UpdateForgetPasswordDTO,
@@ -58,11 +58,7 @@ export class UserService {
           status: HttpStatus.UNAUTHORIZED,
         });
       }
-      const result = getRequiredProperties(user, [
-        'hash',
-        'createdAt',
-        'updatedAt',
-      ]) as User;
+      const result = getRequiredProperties(user, ['hash']) as Partial<User>;
       return ApiSuccessResponse<User>(
         true,
         AUTH_MESSAGE.success.USER_UPDATED,
@@ -84,10 +80,12 @@ export class UserService {
     }
   }
 
-  async forgetPassword(payload: ForgetPasswordDTO): Promise<ApiResponse<null>> {
+  async forgetPassword({
+    email,
+  }: ForgetPasswordDTO): Promise<ApiResponse<null>> {
     try {
       const user = await this.prismaService.user.findUnique({
-        where: { email: payload.email },
+        where: { email },
         include: {
           oAuthProviders: {
             select: {
@@ -116,15 +114,20 @@ export class UserService {
           status: HttpStatus.BAD_REQUEST,
         });
       }
-
+      const payload = {
+        sub: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      };
       const token = this.jwtService.sign(payload, {
-        secret: process.env.JWT_FORGET_PASSWORD_SECRET,
+        secret: process.env.JWT_FORGET_PASSWORD_SECRET + user.hash,
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
-      const url = `http://localhost:3000/v1/api/user/${user?.id}/forget-password?token=${token}`;
-      await this.mailService.sendMail(user?.email, {
+      const url = `http://localhost:3000/v1/api/user/${payload?.sub}/forget-password?token=${token}`;
+      await this.mailService.sendMail(payload?.email, {
         url,
-        name: user?.firstName,
+        name: payload?.firstName,
       });
       return ApiSuccessResponse(true, AUTH_MESSAGE.success.EMAIL_SENT);
     } catch (error) {

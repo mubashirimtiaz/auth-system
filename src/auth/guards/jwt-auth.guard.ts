@@ -1,11 +1,14 @@
 import { ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiErrorResponse } from 'src/classes/global.class';
-import { throwApiErrorResponse } from 'src/utils/functions';
+import { ApiErrorResponse } from 'src/common/classes';
+import { throwApiErrorResponse } from 'src/common/functions';
 import { AUTH_MESSAGE } from '../message/auth.message';
 
+// @Injectable()
+// export class JwtAuthGuard extends AuthGuard('jwt') {}
+
 @Injectable()
-export class JwtRefreshAuthGuard extends AuthGuard('jwt-refresh-token') {
+export class JwtAuthGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
     return super.canActivate(context);
   }
