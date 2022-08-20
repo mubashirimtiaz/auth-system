@@ -2,10 +2,9 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
-import { JwtTOKEN, UserPayload } from '../interface/auth.interface';
+import { JwtTOKEN, User } from '../interface/auth.interface';
 import { StrategyType } from '../enum/auth.enum';
 import { AUTH_MESSAGE } from '../message/auth.message';
-import { ApiErrorResponse } from 'src/classes/global.class';
 import { throwApiErrorResponse } from 'src/utils/functions';
 
 @Injectable()
@@ -21,7 +20,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  async validate(payload: JwtTOKEN): Promise<UserPayload> {
+  async validate(payload: JwtTOKEN): Promise<User> {
     try {
       const user = await this.authService.validateUser(
         payload,
@@ -37,12 +36,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
           status: HttpStatus.UNAUTHORIZED,
         });
       }
-      return {
-        email: user?.email,
-        id: user?.id,
-        firstName: user?.firstName,
-        lastName: user?.lastName,
-      };
+      return user;
     } catch (error) {
       throwApiErrorResponse(error);
     }

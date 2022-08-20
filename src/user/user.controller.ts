@@ -6,10 +6,13 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { JwtForgetPasswordGuard } from 'src/auth/auth_guards/forget-password-auth.guard';
 import { JwtAuthGuard } from 'src/auth/auth_guards/jwt-auth.guard';
 import { StrategyRequestHandler } from 'src/interfaces/global.interface';
+import { getRequiredProperties } from 'src/utils/functions';
 import {
   ForgetPasswordDTO,
+  UpdateForgetPasswordDTO,
   UpdatePasswordDTO,
   UpdateProfileDTO,
 } from './dto/user.dto';
@@ -21,7 +24,7 @@ export class UserController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   getProfile(@Request() req: StrategyRequestHandler) {
-    return req.user;
+    return getRequiredProperties(req.user, ['hash']);
   }
 
   @Post('update-profile')
@@ -45,5 +48,20 @@ export class UserController {
   @Post('forget-password')
   forgetPassword(@Body() { email }: ForgetPasswordDTO) {
     return this.userService.forgetPassword({ email });
+  }
+
+  @Get(':id/forget-password')
+  @UseGuards(JwtForgetPasswordGuard)
+  getForgetPassword(@Request() req: StrategyRequestHandler) {
+    return getRequiredProperties(req.user, ['hash']);
+  }
+
+  @Post(':id/forget-password')
+  @UseGuards(JwtForgetPasswordGuard)
+  async updateForgetPassword(
+    @Request() req: StrategyRequestHandler,
+    @Body() { newPassword }: UpdateForgetPasswordDTO,
+  ) {
+    return this.userService.updateForgetPassword({ newPassword }, req.user);
   }
 }
