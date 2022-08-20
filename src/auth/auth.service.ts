@@ -7,11 +7,7 @@ import { JwtTOKEN, User } from './interface/auth.interface';
 import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 import { StrategyType } from './enum/auth.enum';
 import { Token, UserValidationData } from './type/auth.type';
-import {
-  ApiSuccessResponse,
-  getRequiredProperties,
-  throwApiErrorResponse,
-} from 'src/utils/functions';
+import { ApiSuccessResponse, throwApiErrorResponse } from 'src/utils/functions';
 import { ApiResponse } from 'src/interfaces/global.interface';
 import { AUTH_MESSAGE } from './message/auth.message';
 

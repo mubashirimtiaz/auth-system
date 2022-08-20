@@ -84,10 +84,12 @@ export class UserService {
     }
   }
 
-  async forgetPassword(payload: ForgetPasswordDTO): Promise<ApiResponse<null>> {
+  async forgetPassword({
+    email,
+  }: ForgetPasswordDTO): Promise<ApiResponse<null>> {
     try {
       const user = await this.prismaService.user.findUnique({
-        where: { email: payload.email },
+        where: { email: email },
         include: {
           oAuthProviders: {
             select: {
@@ -116,15 +118,20 @@ export class UserService {
           status: HttpStatus.BAD_REQUEST,
         });
       }
-
+      const payload = {
+        sub: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      };
       const token = this.jwtService.sign(payload, {
-        secret: process.env.JWT_FORGET_PASSWORD_SECRET,
+        secret: process.env.JWT_FORGET_PASSWORD_SECRET + user.hash,
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
-      const url = `http://localhost:3000/v1/api/user/${user?.id}/forget-password?token=${token}`;
-      await this.mailService.sendMail(user?.email, {
+      const url = `http://localhost:3000/v1/api/user/${payload?.sub}/forget-password?token=${token}`;
+      await this.mailService.sendMail(payload?.email, {
         url,
-        name: user?.firstName,
+        name: payload?.firstName,
       });
       return ApiSuccessResponse(true, AUTH_MESSAGE.success.EMAIL_SENT);
     } catch (error) {

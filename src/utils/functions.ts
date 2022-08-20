@@ -1,5 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
-import { ApiErrorResponse } from 'src/classes/global.class';
+import { ApiErrorResponse } from 'src/utils/classes';
 import { ApiResponse } from 'src/interfaces/global.interface';
 import { GLOBAL_MESSAGE } from 'src/messages/global.message';
 
