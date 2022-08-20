@@ -8,7 +8,11 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/auth_guards/jwt-auth.guard';
 import { StrategyRequestHandler } from 'src/interfaces/global.interface';
-import { UpdatePasswordDTO, UpdateProfileDTO } from './dto/user.dto';
+import {
+  ForgetPasswordDTO,
+  UpdatePasswordDTO,
+  UpdateProfileDTO,
+} from './dto/user.dto';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -36,5 +40,10 @@ export class UserController {
     @Body() body: UpdatePasswordDTO,
   ) {
     return this.userService.updatePassword(body, req.user);
+  }
+
+  @Post('forget-password')
+  forgetPassword(@Body() { email }: ForgetPasswordDTO) {
+    return this.userService.forgetPassword({ email });
   }
 }
