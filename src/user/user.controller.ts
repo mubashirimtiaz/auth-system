@@ -52,8 +52,8 @@ export class UserController {
 
   @Get(':id/forget-password')
   @UseGuards(JwtForgetPasswordGuard)
-  async getForgetPassword(@Request() req: StrategyRequestHandler) {
-    return req.user;
+  getForgetPassword(@Request() req: StrategyRequestHandler) {
+    return getRequiredProperties(req.user, ['hash']);
   }
 
   @Post(':id/forget-password')
