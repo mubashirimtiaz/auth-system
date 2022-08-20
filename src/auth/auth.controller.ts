@@ -32,9 +32,7 @@ export class AuthController {
   @Post('refresh')
   @UseGuards(JwtRefreshAuthGuard)
   refreshAccessToken(@Request() req: StrategyRequestHandler) {
-    return this.authService.refreshAccessToken({
-      user: req.user,
-    });
+    return this.authService.refreshAccessToken(req.user);
   }
 
   @Get('google')

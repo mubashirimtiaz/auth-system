@@ -10,7 +10,7 @@ export class GoogleAuthGuard extends AuthGuard('google') {
   }
 
   handleRequest(error, user, info) {
-    console.log(error, user, info);
+    console.log('from-google', error, user, info);
 
     // You can throw an exception based on either "info" or "err" arguments
     if (error || !user) {

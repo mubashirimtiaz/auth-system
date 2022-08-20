@@ -13,11 +13,16 @@ export class UpdateProfileDTO {
 }
 
 export class UpdatePasswordDTO {
-  @IsOptional()
   @IsString()
   @IsNotEmpty()
   oldPassword: string;
 
+  @IsString()
+  @IsNotEmpty()
+  newPassword: string;
+}
+
+export class UpdateForgetPasswordDTO {
   @IsString()
   @IsNotEmpty()
   newPassword: string;
