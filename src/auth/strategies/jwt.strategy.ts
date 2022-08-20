@@ -33,7 +33,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
           status: HttpStatus.UNAUTHORIZED,
         });
       }
-      console.log(user);
 
       return user;
     } catch (error) {

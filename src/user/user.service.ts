@@ -58,7 +58,7 @@ export class UserService {
           status: HttpStatus.UNAUTHORIZED,
         });
       }
-      const result = getRequiredProperties(user, ['hash']) as User;
+      const result = getRequiredProperties(user, ['hash']) as Partial<User>;
       return ApiSuccessResponse<User>(
         true,
         AUTH_MESSAGE.success.USER_UPDATED,
@@ -85,7 +85,7 @@ export class UserService {
   }: ForgetPasswordDTO): Promise<ApiResponse<null>> {
     try {
       const user = await this.prismaService.user.findUnique({
-        where: { email: email },
+        where: { email },
         include: {
           oAuthProviders: {
             select: {
