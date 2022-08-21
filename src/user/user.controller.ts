@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { StrategyRequestHandler } from 'src/common/interfaces';
-import { getRequiredProperties } from 'src/common/functions';
+import { ApiSuccessResponse } from 'src/common/functions';
 import {
   ForgetPasswordDTO,
   UpdateForgetPasswordDTO,
@@ -18,6 +18,8 @@ import {
 } from './dto/user.dto';
 import { ForgetPasswordInterceptor } from './interceptor/user.interceptor';
 import { UserService } from './user.service';
+import { User } from 'src/auth/interface/auth.interface';
+import { MESSAGE } from 'src/common/messages';
 
 @Controller('user')
 export class UserController {
@@ -25,7 +27,11 @@ export class UserController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   getProfile(@Request() req: StrategyRequestHandler) {
-    return getRequiredProperties(req.user, ['hash']);
+    return ApiSuccessResponse<Partial<User>>(
+      true,
+      MESSAGE.user.success.USER_FOUND,
+      req.user,
+    );
   }
 
   @Post('update-profile')
@@ -52,7 +58,11 @@ export class UserController {
   @Get(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
   getForgetPassword(@Request() req: StrategyRequestHandler) {
-    return getRequiredProperties(req.user, ['hash']);
+    return ApiSuccessResponse<Partial<User>>(
+      true,
+      MESSAGE.user.success.USER_FOUND,
+      req.user,
+    );
   }
 
   @Post(':id/forget-password')
