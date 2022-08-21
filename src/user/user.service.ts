@@ -1,8 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { User } from 'src/auth/interface/auth.interface';
-import { AUTH_MESSAGE } from 'src/auth/message/auth.message';
 import { ApiResponse } from 'src/common/interfaces';
-import { GLOBAL_MESSAGE } from 'src/common/messages';
+import { MESSAGE } from 'src/common/messages';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   ApiSuccessResponse,
@@ -35,7 +34,7 @@ export class UserService {
       if (!profile.firstName && !profile.lastName) {
         throwApiErrorResponse({
           response: {
-            message: GLOBAL_MESSAGE.error.NO_DATA_FOUND,
+            message: MESSAGE.general.error.NO_DATA_FOUND,
             success: false,
           },
           status: HttpStatus.BAD_REQUEST,
@@ -52,7 +51,7 @@ export class UserService {
       if (!user) {
         throwApiErrorResponse({
           response: {
-            message: AUTH_MESSAGE.error.USER_NOT_FOUND,
+            message: MESSAGE.user.error.USER_NOT_FOUND,
             success: false,
           },
           status: HttpStatus.UNAUTHORIZED,
@@ -61,7 +60,7 @@ export class UserService {
       const result = getRequiredProperties(user, ['hash']) as Partial<User>;
       return ApiSuccessResponse<User>(
         true,
-        AUTH_MESSAGE.success.USER_UPDATED,
+        MESSAGE.user.success.USER_UPDATED,
         result,
       );
     } catch (error) {
@@ -98,7 +97,7 @@ export class UserService {
       if (!user) {
         throwApiErrorResponse({
           response: {
-            message: AUTH_MESSAGE.error.USER_INVALID_EMAIL,
+            message: MESSAGE.user.error.USER_INVALID_EMAIL,
             success: false,
           },
           status: HttpStatus.BAD_REQUEST,
@@ -107,7 +106,7 @@ export class UserService {
       if (!user?.hash) {
         throwApiErrorResponse({
           response: {
-            message: AUTH_MESSAGE.error.USER_MISSING_PASSWORD,
+            message: MESSAGE.user.error.USER_MISSING_PASSWORD,
             success: false,
             data: user?.oAuthProviders,
           },
@@ -129,7 +128,7 @@ export class UserService {
         url,
         name: payload?.firstName,
       });
-      return ApiSuccessResponse(true, AUTH_MESSAGE.success.EMAIL_SENT);
+      return ApiSuccessResponse(true, MESSAGE.general.success.EMAIL_SENT);
     } catch (error) {
       throwApiErrorResponse(error);
     }
@@ -155,7 +154,7 @@ export class UserService {
         if (!(await bcrypt.compare(credential.oldPassword, user.hash))) {
           throwApiErrorResponse({
             response: {
-              message: AUTH_MESSAGE.error.USER_INVALID_PASSWORD,
+              message: MESSAGE.user.error.USER_INVALID_PASSWORD,
               success: false,
             },
             status: HttpStatus.BAD_REQUEST,
@@ -166,7 +165,7 @@ export class UserService {
       if (await bcrypt.compare(credential.newPassword, user.hash)) {
         throwApiErrorResponse({
           response: {
-            message: AUTH_MESSAGE.error.USER_SAME_PASSWORD,
+            message: MESSAGE.user.error.USER_SAME_PASSWORD,
             success: false,
           },
           status: HttpStatus.BAD_REQUEST,
@@ -183,7 +182,7 @@ export class UserService {
 
       return ApiSuccessResponse(
         true,
-        AUTH_MESSAGE.success.USER_PASSWORD_UPDATED,
+        MESSAGE.user.success.USER_PASSWORD_UPDATED,
       );
     } catch (error) {
       throwApiErrorResponse(error);

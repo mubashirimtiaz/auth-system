@@ -10,9 +10,8 @@ import { Observable } from 'rxjs';
 import { AuthService } from 'src/auth/auth.service';
 import { StrategyType } from 'src/auth/enum/auth.enum';
 import { JwtTOKEN } from 'src/auth/interface/auth.interface';
-import { AUTH_MESSAGE } from 'src/auth/message/auth.message';
 import { throwApiErrorResponse } from 'src/common/functions';
-import { GLOBAL_MESSAGE } from 'src/common/messages';
+import { MESSAGE } from 'src/common/messages';
 
 @Injectable()
 export class ForgetPasswordInterceptor implements NestInterceptor {
@@ -30,7 +29,7 @@ export class ForgetPasswordInterceptor implements NestInterceptor {
       if (!token) {
         throwApiErrorResponse({
           response: {
-            message: AUTH_MESSAGE.error.AUTH_TOKEN_MISSING,
+            message: MESSAGE.user.error.AUTH_TOKEN_MISSING,
             success: false,
           },
           status: HttpStatus.UNAUTHORIZED,
