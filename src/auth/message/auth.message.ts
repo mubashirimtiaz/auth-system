@@ -6,6 +6,7 @@ export const AUTH_MESSAGE = {
     USER_LOGGED_IN: 'User logged in successfully',
     REFRESH_TOKEN_VERIFIED: 'Refresh token verified successfully',
     USER_PASSWORD_UPDATED: 'User password updated successfully',
+    USER_FOUND: 'User found successfully',
   },
   //ERROR
   error: {

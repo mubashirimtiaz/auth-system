@@ -5,7 +5,6 @@ import { MESSAGE } from 'src/common/messages';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   ApiSuccessResponse,
-  getRequiredProperties,
   throwApiErrorResponse,
 } from 'src/common/functions';
 import {
@@ -17,6 +16,7 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { MailService } from 'src/mail/mail.service';
 import { JwtService } from '@nestjs/jwt';
+import { ForgetPasswordToken } from './type/user.type';
 
 @Injectable()
 export class UserService {
@@ -57,11 +57,10 @@ export class UserService {
           status: HttpStatus.UNAUTHORIZED,
         });
       }
-      const result = getRequiredProperties(user, ['hash']) as Partial<User>;
       return ApiSuccessResponse<User>(
         true,
         MESSAGE.user.success.USER_UPDATED,
-        result,
+        user,
       );
     } catch (error) {
       throwApiErrorResponse(error);
@@ -81,7 +80,7 @@ export class UserService {
 
   async forgetPassword({
     email,
-  }: ForgetPasswordDTO): Promise<ApiResponse<null>> {
+  }: ForgetPasswordDTO): Promise<ApiResponse<ForgetPasswordToken>> {
     try {
       const user = await this.prismaService.user.findUnique({
         where: { email },
@@ -128,7 +127,11 @@ export class UserService {
         url,
         name: payload?.firstName,
       });
-      return ApiSuccessResponse(true, MESSAGE.general.success.EMAIL_SENT);
+      return ApiSuccessResponse<ForgetPasswordToken>(
+        true,
+        MESSAGE.general.success.EMAIL_SENT,
+        { token },
+      );
     } catch (error) {
       throwApiErrorResponse(error);
     }
