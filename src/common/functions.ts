@@ -1,7 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import { ApiErrorResponse } from 'src/common/classes';
 import { ApiResponse } from 'src/common/interfaces';
-import { GLOBAL_MESSAGE } from 'src/common/messages';
+import { MESSAGE } from 'src/common/messages';
 
 export const ApiSuccessResponse = <T>(
   success: boolean,
@@ -30,7 +30,7 @@ export const throwApiErrorResponse = <T>(error: {
   throw new ApiErrorResponse(
     {
       message:
-        error?.response?.message || GLOBAL_MESSAGE.error.INTERNAL_SERVER_ERROR,
+        error?.response?.message || MESSAGE.server.error.INTERNAL_SERVER_ERROR,
       success: error?.response?.success || false,
       ...(error?.response?.data && { data: error?.response?.data }),
     },
