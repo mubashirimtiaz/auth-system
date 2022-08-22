@@ -3,7 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { OAUTH_PROVIDER } from '@prisma/client';
-import { JwtTOKEN, User } from './interface/auth.interface';
+import { JwtTOKEN } from './interface/auth.interface';
+import { User } from 'src/common/interfaces';
 import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 import { StrategyType } from './enum/auth.enum';
 import { Token, UserValidationData } from './type/auth.type';
@@ -13,6 +14,7 @@ import {
 } from 'src/common/functions';
 import { ApiResponse } from 'src/common/interfaces';
 import { AUTH_MESSAGE } from './message/auth.message';
+import { MESSAGE } from 'src/common/messages';
 
 @Injectable()
 export class AuthService {
@@ -37,7 +39,7 @@ export class AuthService {
 
     return ApiSuccessResponse<Token>(
       true,
-      AUTH_MESSAGE.success.USER_LOGGED_IN,
+      MESSAGE.user.success.USER_LOGGED_IN,
       {
         accessToken,
         refreshToken,
@@ -76,7 +78,7 @@ export class AuthService {
 
       return ApiSuccessResponse<Token>(
         true,
-        AUTH_MESSAGE.success.USER_CREATED,
+        MESSAGE.user.success.USER_CREATED,
         {
           accessToken,
           refreshToken,
@@ -105,7 +107,7 @@ export class AuthService {
         if (!user) {
           throwApiErrorResponse({
             response: {
-              message: AUTH_MESSAGE.error.USER_INVALID_EMAIL,
+              message: MESSAGE.user.error.USER_INVALID_EMAIL,
               success: false,
             },
             status: HttpStatus.UNAUTHORIZED,
@@ -118,7 +120,7 @@ export class AuthService {
         if (!isValidPassword) {
           throwApiErrorResponse({
             response: {
-              message: AUTH_MESSAGE.error.USER_INVALID_PASSWORD,
+              message: MESSAGE.user.error.USER_INVALID_PASSWORD,
               success: false,
             },
             status: HttpStatus.UNAUTHORIZED,
@@ -178,7 +180,7 @@ export class AuthService {
           if (providerName === 'EMAIL_PASSWORD') {
             throwApiErrorResponse({
               response: {
-                message: AUTH_MESSAGE.error.USER_ALREADY_EXISTS,
+                message: MESSAGE.user.error.USER_ALREADY_EXISTS,
                 success: false,
               },
               status: HttpStatus.CONFLICT,

@@ -2,6 +2,7 @@ import { ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiErrorResponse } from 'src/common/classes';
 import { throwApiErrorResponse } from 'src/common/functions';
+import { MESSAGE } from 'src/common/messages';
 import { AUTH_MESSAGE } from '../message/auth.message';
 
 @Injectable()
@@ -13,7 +14,7 @@ export class LocalAuthGuard extends AuthGuard('local') {
     if (info?.message === 'Missing credentials') {
       throwApiErrorResponse({
         response: {
-          message: AUTH_MESSAGE.error.USER_MISSING_CREDENTIALS,
+          message: MESSAGE.user.error.USER_MISSING_CREDENTIALS,
           success: false,
         },
         status: HttpStatus.UNAUTHORIZED,
@@ -25,7 +26,7 @@ export class LocalAuthGuard extends AuthGuard('local') {
       throw (
         error ||
         new ApiErrorResponse(
-          { message: AUTH_MESSAGE.error.USER_NOT_FOUND, success: false },
+          { message: MESSAGE.user.error.USER_NOT_FOUND, success: false },
           HttpStatus.UNAUTHORIZED,
         )
       );

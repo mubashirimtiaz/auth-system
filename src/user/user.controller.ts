@@ -18,8 +18,8 @@ import {
 } from './dto/user.dto';
 import { ForgetPasswordInterceptor } from './interceptor/user.interceptor';
 import { UserService } from './user.service';
-import { User } from 'src/auth/interface/auth.interface';
 import { MESSAGE } from 'src/common/messages';
+import { User } from './interface/user.interface';
 
 @Controller('user')
 export class UserController {

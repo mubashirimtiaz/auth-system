@@ -1,7 +1,8 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { User } from 'src/auth/interface/auth.interface';
+import { User } from './interface/user.interface';
 import { ApiResponse } from 'src/common/interfaces';
 import { MESSAGE } from 'src/common/messages';
+import { USER_MESSAGE } from './message/user.message';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   ApiSuccessResponse,
@@ -51,7 +52,7 @@ export class UserService {
       if (!user) {
         throwApiErrorResponse({
           response: {
-            message: MESSAGE.user.error.USER_NOT_FOUND,
+            message: USER_MESSAGE.error.USER_NOT_FOUND,
             success: false,
           },
           status: HttpStatus.UNAUTHORIZED,
@@ -59,7 +60,7 @@ export class UserService {
       }
       return ApiSuccessResponse<User>(
         true,
-        MESSAGE.user.success.USER_UPDATED,
+        USER_MESSAGE.success.USER_UPDATED,
         user,
       );
     } catch (error) {
@@ -96,7 +97,7 @@ export class UserService {
       if (!user) {
         throwApiErrorResponse({
           response: {
-            message: MESSAGE.user.error.USER_INVALID_EMAIL,
+            message: USER_MESSAGE.error.USER_INVALID_EMAIL,
             success: false,
           },
           status: HttpStatus.BAD_REQUEST,
@@ -105,7 +106,7 @@ export class UserService {
       if (!user?.hash) {
         throwApiErrorResponse({
           response: {
-            message: MESSAGE.user.error.USER_MISSING_PASSWORD,
+            message: USER_MESSAGE.error.USER_MISSING_PASSWORD,
             success: false,
             data: user?.oAuthProviders,
           },
@@ -129,7 +130,7 @@ export class UserService {
       });
       return ApiSuccessResponse<ForgetPasswordToken>(
         true,
-        MESSAGE.general.success.EMAIL_SENT,
+        MESSAGE.mail.success.EMAIL_SENT,
         { token },
       );
     } catch (error) {
@@ -157,7 +158,7 @@ export class UserService {
         if (!(await bcrypt.compare(credential.oldPassword, user.hash))) {
           throwApiErrorResponse({
             response: {
-              message: MESSAGE.user.error.USER_INVALID_PASSWORD,
+              message: USER_MESSAGE.error.USER_INVALID_PASSWORD,
               success: false,
             },
             status: HttpStatus.BAD_REQUEST,
@@ -168,7 +169,7 @@ export class UserService {
       if (await bcrypt.compare(credential.newPassword, user.hash)) {
         throwApiErrorResponse({
           response: {
-            message: MESSAGE.user.error.USER_SAME_PASSWORD,
+            message: USER_MESSAGE.error.USER_SAME_PASSWORD,
             success: false,
           },
           status: HttpStatus.BAD_REQUEST,
@@ -185,7 +186,7 @@ export class UserService {
 
       return ApiSuccessResponse(
         true,
-        MESSAGE.user.success.USER_PASSWORD_UPDATED,
+        USER_MESSAGE.success.USER_PASSWORD_UPDATED,
       );
     } catch (error) {
       throwApiErrorResponse(error);

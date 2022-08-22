@@ -4,8 +4,8 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { OAUTH_PROVIDER } from '@prisma/client';
 import { Profile } from 'passport';
-import { AUTH_MESSAGE } from '../message/auth.message';
 import { throwApiErrorResponse } from 'src/common/functions';
+import { MESSAGE } from 'src/common/messages';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -43,7 +43,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       if (!user) {
         throwApiErrorResponse({
           response: {
-            message: AUTH_MESSAGE.error.USER_NOT_FOUND,
+            message: MESSAGE.user.error.USER_NOT_FOUND,
             success: false,
           },
           status: HttpStatus.UNAUTHORIZED,

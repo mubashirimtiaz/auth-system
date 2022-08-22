@@ -29,7 +29,7 @@ export class ForgetPasswordInterceptor implements NestInterceptor {
       if (!token) {
         throwApiErrorResponse({
           response: {
-            message: MESSAGE.user.error.AUTH_TOKEN_MISSING,
+            message: MESSAGE.auth.error.AUTH_TOKEN_MISSING,
             success: false,
           },
           status: HttpStatus.UNAUTHORIZED,
