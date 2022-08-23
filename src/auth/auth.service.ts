@@ -27,14 +27,12 @@ export class AuthService {
     const accessToken = this.getAccessToken({
       email: payload.email,
       sub: payload.id,
-      firstName: payload.firstName,
-      lastName: payload.lastName,
+      name: payload.name,
     });
     const refreshToken = this.getRefreshToken({
       email: payload.email,
       sub: payload.id,
-      firstName: payload.firstName,
-      lastName: payload.lastName,
+      name: payload.name,
     });
 
     return ApiSuccessResponse<Token>(
@@ -50,14 +48,12 @@ export class AuthService {
   async signup({
     email,
     password,
-    firstName,
-    lastName,
+    name,
   }: SignUpDTO): Promise<ApiResponse<Token>> {
     try {
       const user = await this.validateUserWithOAuth({
         email,
-        firstName,
-        lastName,
+        name,
         password,
         providerName: OAUTH_PROVIDER.EMAIL_PASSWORD,
       });
@@ -65,15 +61,13 @@ export class AuthService {
       const accessToken = await this.getAccessToken({
         email: user.email,
         sub: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
       });
 
       const refreshToken = await this.getRefreshToken({
         email: user.email,
         sub: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
       });
 
       return ApiSuccessResponse<Token>(
@@ -138,8 +132,7 @@ export class AuthService {
     const accessToken = this.getAccessToken({
       email: user.email,
       sub: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      name: user.name,
     });
     return ApiSuccessResponse<Token>(
       true,
@@ -154,8 +147,7 @@ export class AuthService {
     email,
     password = null,
     providerId = null,
-    lastName,
-    firstName,
+    name,
     picture,
     providerName,
   }: UserValidationData): Promise<User> {
@@ -206,8 +198,7 @@ export class AuthService {
       }
       const newUser = await this.prismaService.user.create({
         data: {
-          firstName,
-          lastName,
+          name,
           email,
           ...(password && { hash: password }),
           ...(picture && { picture }),

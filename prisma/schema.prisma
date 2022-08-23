@@ -17,8 +17,7 @@ enum OAUTH_PROVIDER {
 model User {
   id             String          @id @default(auto()) @map("_id") @db.ObjectId
   email          String          @unique
-  firstName      String
-  lastName       String
+  name           String
   hash           String?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @default(now())

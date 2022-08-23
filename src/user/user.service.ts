@@ -32,7 +32,7 @@ export class UserService {
     payload: User,
   ): Promise<ApiResponse<User>> {
     try {
-      if (!profile.firstName && !profile.lastName) {
+      if (!profile.name) {
         throwApiErrorResponse({
           response: {
             message: MESSAGE.general.error.NO_DATA_FOUND,
@@ -44,8 +44,7 @@ export class UserService {
       const user = await this.prismaService.user.update({
         where: { email: payload?.email },
         data: {
-          ...(profile.firstName && { firstName: profile.firstName }),
-          ...(profile.lastName && { lastName: profile.lastName }),
+          ...(profile.name && { name: profile.name }),
           updatedAt: new Date(),
         },
       });
@@ -116,8 +115,7 @@ export class UserService {
       const payload = {
         sub: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
       };
       const token = this.jwtService.sign(payload, {
         secret: process.env.JWT_FORGET_PASSWORD_SECRET + user.hash,
@@ -126,7 +124,7 @@ export class UserService {
       const url = `http://localhost:3000/v1/api/user/${payload?.sub}/forget-password?token=${token}`;
       await this.mailService.sendMail(payload?.email, {
         url,
-        name: payload?.firstName,
+        name: payload?.name,
       });
       return ApiSuccessResponse<ForgetPasswordToken>(
         true,

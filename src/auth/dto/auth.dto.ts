@@ -9,11 +9,7 @@ import {
 export class SignUpDTO {
   @IsString()
   @IsNotEmpty()
-  firstName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  lastName: string;
+  name: string;
 
   @IsString()
   @IsNotEmpty()
