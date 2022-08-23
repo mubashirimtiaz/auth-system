@@ -16,10 +16,11 @@ import {
   UpdatePasswordDTO,
   UpdateProfileDTO,
 } from './dto/user.dto';
-import { ForgetPasswordInterceptor } from './interceptor/user.interceptor';
+import { ForgetPasswordInterceptor } from './interceptor/forget-password.interceptor';
 import { UserService } from './user.service';
 import { MESSAGE } from 'src/common/messages';
 import { User } from './interface/user.interface';
+import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
 
 @Controller('user')
 export class UserController {
@@ -55,7 +56,7 @@ export class UserController {
   forgetPassword(@Body() { email }: ForgetPasswordDTO) {
     return this.userService.forgetPassword({ email });
   }
-  @Get(':id/forget-password')
+  @Get('forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
   getForgetPassword(@Request() req: StrategyRequestHandler) {
     return ApiSuccessResponse<Partial<User>>(
@@ -65,12 +66,18 @@ export class UserController {
     );
   }
 
-  @Post(':id/forget-password')
+  @Post('forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
-  async updateForgetPassword(
+  updateForgetPassword(
     @Request() req: StrategyRequestHandler,
     @Body() { newPassword }: UpdateForgetPasswordDTO,
   ) {
     return this.userService.updateForgetPassword({ newPassword }, req.user);
+  }
+
+  @Get('verify-email')
+  @UseInterceptors(VerifyEmailInterceptor)
+  verifyEmail(@Request() req: StrategyRequestHandler) {
+    return this.userService.verifyEmail(req.user);
   }
 }

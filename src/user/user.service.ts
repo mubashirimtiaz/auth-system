@@ -17,7 +17,7 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { MailService } from 'src/mail/mail.service';
 import { JwtService } from '@nestjs/jwt';
-import { ForgetPasswordToken } from './type/user.type';
+import { Token } from 'src/common/types';
 
 @Injectable()
 export class UserService {
@@ -80,7 +80,7 @@ export class UserService {
 
   async forgetPassword({
     email,
-  }: ForgetPasswordDTO): Promise<ApiResponse<ForgetPasswordToken>> {
+  }: ForgetPasswordDTO): Promise<ApiResponse<Token>> {
     try {
       const user = await this.prismaService.user.findUnique({
         where: { email },
@@ -122,13 +122,18 @@ export class UserService {
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
       const url = `http://localhost:3000/v1/api/user/${payload?.sub}/forget-password?token=${token}`;
-      await this.mailService.sendMail(payload?.email, {
-        url,
-        name: payload?.name,
-      });
-      return ApiSuccessResponse<ForgetPasswordToken>(
+      await this.mailService.sendMail(
+        payload?.email,
+        {
+          url,
+          name: payload?.name,
+        },
+        'FUMA! Forget your password?',
+        './forget-password',
+      );
+      return ApiSuccessResponse<Token>(
         true,
-        MESSAGE.mail.success.EMAIL_SENT,
+        MESSAGE.mail.success.FORGET_PASSWORD_MAIL_SENT,
         { token },
       );
     } catch (error) {
@@ -139,6 +144,35 @@ export class UserService {
   async updateForgetPassword(payload: UpdateForgetPasswordDTO, user) {
     try {
       return await this.passwordLookup(payload, user);
+    } catch (error) {
+      throwApiErrorResponse(error);
+    }
+  }
+
+  async verifyEmail(user: User): Promise<ApiResponse<null>> {
+    try {
+      if (user?.emailVerified) {
+        throwApiErrorResponse({
+          response: {
+            message: USER_MESSAGE.error.USER_EMAIL_ALREADY_VERIFIED,
+            success: false,
+          },
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+      await this.prismaService.user.update({
+        where: { email: user.email },
+        data: {
+          emailVerified: true,
+          updatedAt: new Date(),
+        },
+      });
+
+      return ApiSuccessResponse<null>(
+        true,
+        USER_MESSAGE.success.USER_EMAIL_VERIFIED,
+        null,
+      );
     } catch (error) {
       throwApiErrorResponse(error);
     }

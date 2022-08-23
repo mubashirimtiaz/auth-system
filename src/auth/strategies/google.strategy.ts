@@ -7,6 +7,9 @@ import { Profile } from 'passport';
 import { throwApiErrorResponse } from 'src/common/functions';
 import { MESSAGE } from 'src/common/messages';
 
+interface GoogleProfile extends Profile {
+  emails: [{ value: string; verified: boolean }];
+}
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private readonly authService: AuthService) {
@@ -21,17 +24,18 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: Profile,
+    profile: GoogleProfile,
     done: VerifyCallback,
   ): Promise<void> {
     const { emails, photos, id, displayName: name } = profile;
     try {
       const user = await this.authService.validateUserWithOAuth({
-        email: emails[0].value,
+        email: emails[0]?.value,
         providerId: id,
         name,
         picture: photos[0].value,
         providerName: OAUTH_PROVIDER.GOOGLE,
+        verified: emails[0]?.verified,
       });
 
       if (!user) {

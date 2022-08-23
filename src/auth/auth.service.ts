@@ -7,7 +7,7 @@ import { JwtTOKEN } from './interface/auth.interface';
 import { User } from 'src/common/interfaces';
 import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 import { StrategyType } from './enum/auth.enum';
-import { Token, UserValidationData } from './type/auth.type';
+import { AuthToken, UserValidationData } from './type/auth.type';
 import {
   ApiSuccessResponse,
   throwApiErrorResponse,
@@ -15,15 +15,27 @@ import {
 import { ApiResponse } from 'src/common/interfaces';
 import { AUTH_MESSAGE } from './message/auth.message';
 import { MESSAGE } from 'src/common/messages';
+import { MailService } from 'src/mail/mail.service';
+import { Token } from 'src/common/types';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prismaService: PrismaService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
-  async login(payload: User): Promise<ApiResponse<Token>> {
+  async login(payload: User): Promise<ApiResponse<AuthToken>> {
+    if (!payload.emailVerified) {
+      throwApiErrorResponse({
+        response: {
+          message: MESSAGE.user.error.USER_EMAIL_NOT_VERIFIED,
+          success: false,
+        },
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
     const accessToken = this.getAccessToken({
       email: payload.email,
       sub: payload.id,
@@ -35,7 +47,7 @@ export class AuthService {
       name: payload.name,
     });
 
-    return ApiSuccessResponse<Token>(
+    return ApiSuccessResponse<AuthToken>(
       true,
       MESSAGE.user.success.USER_LOGGED_IN,
       {
@@ -49,7 +61,7 @@ export class AuthService {
     email,
     password,
     name,
-  }: SignUpDTO): Promise<ApiResponse<Token>> {
+  }: SignUpDTO): Promise<ApiResponse<AuthToken | Token>> {
     try {
       const user = await this.validateUserWithOAuth({
         email,
@@ -57,20 +69,31 @@ export class AuthService {
         password,
         providerName: OAUTH_PROVIDER.EMAIL_PASSWORD,
       });
+      const payload = { email: user.email, sub: user.id, name: user.name };
+      if (!user?.emailVerified) {
+        const token = this.jwtService.sign(payload, {
+          secret: process.env.VERIFY_EMAIL_SECRET + user.email,
+          expiresIn: process.env.VERIFY_EMAIL_EXPIRATION_TIME,
+        });
+        const url = `http://localhost:3000/v1/api/user/verify-email?token=${token}`;
+        await this.mailService.sendMail(
+          user?.email,
+          { name: user?.name, url },
+          'FUMA! Verify Email',
+          './verify-email',
+        );
+        return ApiSuccessResponse<Token>(
+          true,
+          MESSAGE.mail.success.VERIFY_EMAIL_MAIL_SENT,
+          { token },
+        );
+      }
 
-      const accessToken = await this.getAccessToken({
-        email: user.email,
-        sub: user.id,
-        name: user.name,
-      });
+      const accessToken = await this.getAccessToken(payload);
 
-      const refreshToken = await this.getRefreshToken({
-        email: user.email,
-        sub: user.id,
-        name: user.name,
-      });
+      const refreshToken = await this.getRefreshToken(payload);
 
-      return ApiSuccessResponse<Token>(
+      return ApiSuccessResponse<AuthToken>(
         true,
         MESSAGE.user.success.USER_CREATED,
         {
@@ -128,13 +151,13 @@ export class AuthService {
     }
   }
 
-  refreshAccessToken(user: User): ApiResponse<Token> {
+  refreshAccessToken(user: User): ApiResponse<AuthToken> {
     const accessToken = this.getAccessToken({
       email: user.email,
       sub: user.id,
       name: user.name,
     });
-    return ApiSuccessResponse<Token>(
+    return ApiSuccessResponse<AuthToken>(
       true,
       AUTH_MESSAGE.success.REFRESH_TOKEN_VERIFIED,
       {
@@ -150,6 +173,7 @@ export class AuthService {
     name,
     picture,
     providerName,
+    verified,
   }: UserValidationData): Promise<User> {
     try {
       const user: User = await this.prismaService.user.findUnique({
@@ -163,6 +187,7 @@ export class AuthService {
           },
         },
       });
+
       if (user) {
         const providerExists = user.oAuthProviders.find(
           (elem) => elem.userId === user.id && elem.provider === providerName,
@@ -196,14 +221,17 @@ export class AuthService {
 
         return updatedUser;
       }
+
       const newUser = await this.prismaService.user.create({
         data: {
           name,
           email,
+          ...(verified && { emailVerified: verified }),
           ...(password && { hash: password }),
           ...(picture && { picture }),
         },
       });
+
       await this.prismaService.oAuthProvider.create({
         data: {
           userId: newUser.id,

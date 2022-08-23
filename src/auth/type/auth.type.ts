@@ -7,9 +7,10 @@ export type UserValidationData = {
   name: string;
   picture?: string | null;
   providerName: OAUTH_PROVIDER;
+  verified?: boolean;
 };
 
-export type Token = {
+export type AuthToken = {
   refreshToken?: string;
   accessToken: string;
 };
