@@ -21,6 +21,7 @@ async function bootstrap() {
     .setDescription('FUMA API description')
     .setVersion('1.0')
     .addTag('core')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

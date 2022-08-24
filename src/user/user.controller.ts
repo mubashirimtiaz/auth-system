@@ -20,10 +20,13 @@ import { MESSAGE } from 'src/common/messages';
 import { User } from './interface/user.interface';
 import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
 import DECORATOR from './decorator/user.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @ApiBearerAuth()
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   getProfile(@DECORATOR.params.Payload() user: User) {
@@ -34,6 +37,7 @@ export class UserController {
     );
   }
 
+  @ApiBearerAuth()
   @Post('update-profile')
   @UseGuards(JwtAuthGuard)
   updateProfile(
@@ -43,6 +47,7 @@ export class UserController {
     return this.userService.updateProfile(body, user);
   }
 
+  @ApiBearerAuth()
   @Post('update-password')
   @UseGuards(JwtAuthGuard)
   updatePassword(
@@ -51,11 +56,12 @@ export class UserController {
   ) {
     return this.userService.updatePassword(body, user);
   }
+
   @Post('forget-password')
   forgetPassword(@Body() { email }: ForgetPasswordDTO) {
     return this.userService.forgetPassword({ email });
   }
-  @Get('forget-password')
+  @Get(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
   getForgetPassword(@DECORATOR.params.Payload() user: User) {
     return ApiSuccessResponse<Partial<User>>(
@@ -65,7 +71,7 @@ export class UserController {
     );
   }
 
-  @Post('forget-password')
+  @Post(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
   updateForgetPassword(
     @DECORATOR.params.Payload() user: User,
