@@ -4,16 +4,14 @@ import {
   IsString,
   MinLength,
   MaxLength,
+  IsAlpha,
 } from 'class-validator';
 
 export class SignUpDTO {
   @IsString()
   @IsNotEmpty()
-  firstName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  lastName: string;
+  @IsAlpha()
+  name: string;
 
   @IsString()
   @IsNotEmpty()

@@ -14,7 +14,7 @@ import { throwApiErrorResponse } from 'src/common/functions';
 import { MESSAGE } from 'src/common/messages';
 
 @Injectable()
-export class ForgetPasswordInterceptor implements NestInterceptor {
+export class VerifyEmailInterceptor implements NestInterceptor {
   constructor(
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
@@ -29,7 +29,7 @@ export class ForgetPasswordInterceptor implements NestInterceptor {
       if (!token) {
         throwApiErrorResponse({
           response: {
-            message: MESSAGE.user.error.AUTH_TOKEN_MISSING,
+            message: MESSAGE.auth.error.AUTH_TOKEN_MISSING,
             success: false,
           },
           status: HttpStatus.UNAUTHORIZED,
@@ -45,7 +45,7 @@ export class ForgetPasswordInterceptor implements NestInterceptor {
 
       await this.jwtService.verify(token, {
         ignoreExpiration: false,
-        secret: process.env.JWT_FORGET_PASSWORD_SECRET + user.hash,
+        secret: process.env.VERIFY_EMAIL_SECRET + user.email,
       });
 
       request.user = user;
