@@ -34,6 +34,6 @@ export const throwApiErrorResponse = <T>(error: {
       success: error?.response?.success || false,
       ...(error?.response?.data && { data: error?.response?.data }),
     },
-    error?.status || HttpStatus.BAD_REQUEST,
+    error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
   );
 };

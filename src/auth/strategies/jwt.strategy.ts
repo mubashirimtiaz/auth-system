@@ -2,10 +2,11 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
-import { JwtTOKEN, User } from '../interface/auth.interface';
+import { JwtTOKEN } from '../interface/auth.interface';
+import { User } from 'src/common/interfaces';
 import { StrategyType } from '../enum/auth.enum';
-import { AUTH_MESSAGE } from '../message/auth.message';
 import { throwApiErrorResponse } from 'src/common/functions';
+import { MESSAGE } from 'src/common/messages';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -27,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       if (!user) {
         throwApiErrorResponse({
           response: {
-            message: AUTH_MESSAGE.error.USER_NOT_FOUND,
+            message: MESSAGE.user.error.USER_NOT_FOUND,
             success: false,
           },
           status: HttpStatus.UNAUTHORIZED,
