@@ -3,12 +3,10 @@ import {
   Controller,
   Get,
   Post,
-  Request,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { StrategyRequestHandler } from 'src/common/interfaces';
 import { ApiSuccessResponse } from 'src/common/functions';
 import {
   ForgetPasswordDTO,
@@ -21,36 +19,37 @@ import { UserService } from './user.service';
 import { MESSAGE } from 'src/common/messages';
 import { User } from './interface/user.interface';
 import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
+import DECORATOR from './decorator/user.decorator';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  getProfile(@Request() req: StrategyRequestHandler) {
+  getProfile(@DECORATOR.params.Payload() user: User) {
     return ApiSuccessResponse<Partial<User>>(
       true,
       MESSAGE.user.success.USER_FOUND,
-      req.user,
+      user,
     );
   }
 
   @Post('update-profile')
   @UseGuards(JwtAuthGuard)
   updateProfile(
-    @Request() req: StrategyRequestHandler,
+    @DECORATOR.params.Payload() user: User,
     @Body() body: UpdateProfileDTO,
   ) {
-    return this.userService.updateProfile(body, req.user);
+    return this.userService.updateProfile(body, user);
   }
 
   @Post('update-password')
   @UseGuards(JwtAuthGuard)
   updatePassword(
-    @Request() req: StrategyRequestHandler,
+    @DECORATOR.params.Payload() user: User,
     @Body() body: UpdatePasswordDTO,
   ) {
-    return this.userService.updatePassword(body, req.user);
+    return this.userService.updatePassword(body, user);
   }
   @Post('forget-password')
   forgetPassword(@Body() { email }: ForgetPasswordDTO) {
@@ -58,26 +57,26 @@ export class UserController {
   }
   @Get('forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
-  getForgetPassword(@Request() req: StrategyRequestHandler) {
+  getForgetPassword(@DECORATOR.params.Payload() user: User) {
     return ApiSuccessResponse<Partial<User>>(
       true,
       MESSAGE.user.success.USER_FOUND,
-      req.user,
+      user,
     );
   }
 
   @Post('forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
   updateForgetPassword(
-    @Request() req: StrategyRequestHandler,
+    @DECORATOR.params.Payload() user: User,
     @Body() { newPassword }: UpdateForgetPasswordDTO,
   ) {
-    return this.userService.updateForgetPassword({ newPassword }, req.user);
+    return this.userService.updateForgetPassword({ newPassword }, user);
   }
 
   @Get('verify-email')
   @UseInterceptors(VerifyEmailInterceptor)
-  verifyEmail(@Request() req: StrategyRequestHandler) {
-    return this.userService.verifyEmail(req.user);
+  verifyEmail(@DECORATOR.params.Payload() user: User) {
+    return this.userService.verifyEmail(user);
   }
 }
