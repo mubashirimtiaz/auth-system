@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { validationPipeException } from './common/functions';
 import { TransformResInterceptor } from './common/interceptors';
 
 async function bootstrap() {
@@ -11,6 +12,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformResInterceptor());
   app.useGlobalPipes(
     new ValidationPipe({
+      exceptionFactory: validationPipeException,
       whitelist: true,
       transform: true,
       transformOptions: { enableImplicitConversion: true },
