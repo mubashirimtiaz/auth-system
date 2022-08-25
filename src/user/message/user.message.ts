@@ -18,6 +18,7 @@ export const USER_MESSAGE = {
     USER_INVALID_PASSWORD: 'Invalid password',
     USER_INVALID_EMAIL: 'Invalid email',
     USER_EMAIL_NOT_VERIFIED: 'Email is not verified',
+    USER_INVALID_NAME: 'name must contain only letters (a-zA-Z)',
     USER_EMAIL_ALREADY_VERIFIED: 'Email is already verified',
     USER_SAME_PASSWORD: 'New password is same as old password',
     USER_MISSING_PASSWORD:

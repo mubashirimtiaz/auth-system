@@ -5,12 +5,17 @@ import {
   IsString,
   MinLength,
   MaxLength,
+  Matches,
 } from 'class-validator';
+import { MESSAGE } from 'src/common/messages';
 
 export class SignUpDTO {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  @Matches(/^[a-zA-Z ]+$/, {
+    message: MESSAGE.user.error.USER_INVALID_NAME,
+  })
   name: string;
 
   @ApiProperty()
