@@ -28,3 +28,9 @@ export const MESSAGE = {
     },
   },
 };
+
+export const messageMap = {
+  'jwt expired': MESSAGE.auth.error.AUTH_TOKEN_EXPIRED,
+  'No auth token': MESSAGE.auth.error.AUTH_TOKEN_MISSING,
+  'invalid signature': MESSAGE.auth.error.AUTH_TOKEN_INVALID,
+};

@@ -13,6 +13,8 @@ export const USER_MESSAGE = {
     USER_ALREADY_EXISTS: 'User already exists',
     USER_NOT_FOUND: 'User not found',
     USER_MISSING_CREDENTIALS: 'Missing credentials',
+    USER_ID_MISSING: 'Missing user id',
+    USER_INVALID_ID: 'Invalid user id',
     USER_INVALID_PASSWORD: 'Invalid password',
     USER_INVALID_EMAIL: 'Invalid email',
     USER_EMAIL_NOT_VERIFIED: 'Email is not verified',
