@@ -5,14 +5,12 @@ import {
   IsString,
   MinLength,
   MaxLength,
-  IsAlpha,
 } from 'class-validator';
 
 export class SignUpDTO {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  @IsAlpha()
   name: string;
 
   @ApiProperty()
