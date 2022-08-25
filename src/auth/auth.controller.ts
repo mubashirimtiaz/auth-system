@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt-refresh-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { SignInDTO, SignUpDTO } from './dto/auth.dto';
+import { RefreshTokenDTO, SignInDTO, SignUpDTO } from './dto/auth.dto';
 import DECORATORS from 'src/common/decorators';
 
 @Controller('auth')
@@ -13,7 +13,6 @@ export class AuthController {
 
   @Post('signin')
   @UseGuards(LocalAuthGuard)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async login(
     @DECORATORS.user.params.Payload() user: User,
     @Body() _: SignInDTO,
@@ -28,7 +27,10 @@ export class AuthController {
 
   @Post('refresh')
   @UseGuards(JwtRefreshAuthGuard)
-  refreshAccessToken(@DECORATORS.user.params.Payload() user: User) {
+  refreshAccessToken(
+    @DECORATORS.user.params.Payload() user: User,
+    @Body() _: RefreshTokenDTO,
+  ) {
     return this.authService.refreshAccessToken(user);
   }
 
