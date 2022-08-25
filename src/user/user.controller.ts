@@ -20,7 +20,7 @@ import { MESSAGE } from 'src/common/messages';
 import { User } from './interface/user.interface';
 import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
 import DECORATOR from './decorator/user.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 
 @Controller('user')
 export class UserController {
@@ -61,6 +61,9 @@ export class UserController {
   forgetPassword(@Body() { email }: ForgetPasswordDTO) {
     return this.userService.forgetPassword({ email });
   }
+
+  @ApiQuery({ name: 'token', required: true })
+  @ApiParam({ name: 'id', required: true })
   @Get(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
   getForgetPassword(@DECORATOR.params.Payload() user: User) {
@@ -70,7 +73,8 @@ export class UserController {
       user,
     );
   }
-
+  @ApiQuery({ name: 'token', required: true })
+  @ApiParam({ name: 'id', required: true })
   @Post(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
   updateForgetPassword(
@@ -80,7 +84,9 @@ export class UserController {
     return this.userService.updateForgetPassword({ newPassword }, user);
   }
 
-  @Get('verify-email')
+  @ApiQuery({ name: 'token', required: true })
+  @ApiParam({ name: 'id', required: true })
+  @Get(':id/verify-email')
   @UseInterceptors(VerifyEmailInterceptor)
   verifyEmail(@DECORATOR.params.Payload() user: User) {
     return this.userService.verifyEmail(user);
