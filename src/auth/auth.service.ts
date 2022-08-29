@@ -3,41 +3,53 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { OAUTH_PROVIDER } from '@prisma/client';
-import { JwtTOKEN, User } from './interface/auth.interface';
+import { JwtTOKEN } from './interface/auth.interface';
+import { User } from 'src/common/interfaces';
 import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 import { StrategyType } from './enum/auth.enum';
-import { Token, UserValidationData } from './type/auth.type';
+import { AuthToken, UserValidationData } from './type/auth.type';
 import {
   ApiSuccessResponse,
   throwApiErrorResponse,
 } from 'src/common/functions';
 import { ApiResponse } from 'src/common/interfaces';
 import { AUTH_MESSAGE } from './message/auth.message';
+import { MESSAGE } from 'src/common/messages';
+import { MailService } from 'src/mail/mail.service';
+import { Token } from 'src/common/types';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prismaService: PrismaService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
-  async login(payload: User): Promise<ApiResponse<Token>> {
+  async login(payload: User): Promise<ApiResponse<AuthToken>> {
+    if (!payload.emailVerified) {
+      throwApiErrorResponse({
+        response: {
+          message: MESSAGE.user.error.USER_EMAIL_NOT_VERIFIED,
+          success: false,
+        },
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
     const accessToken = this.getAccessToken({
       email: payload.email,
       sub: payload.id,
-      firstName: payload.firstName,
-      lastName: payload.lastName,
+      name: payload.name,
     });
     const refreshToken = this.getRefreshToken({
       email: payload.email,
       sub: payload.id,
-      firstName: payload.firstName,
-      lastName: payload.lastName,
+      name: payload.name,
     });
 
-    return ApiSuccessResponse<Token>(
+    return ApiSuccessResponse<AuthToken>(
       true,
-      AUTH_MESSAGE.success.USER_LOGGED_IN,
+      MESSAGE.user.success.USER_LOGGED_IN,
       {
         accessToken,
         refreshToken,
@@ -48,35 +60,42 @@ export class AuthService {
   async signup({
     email,
     password,
-    firstName,
-    lastName,
-  }: SignUpDTO): Promise<ApiResponse<Token>> {
+    name,
+  }: SignUpDTO): Promise<ApiResponse<AuthToken | Token>> {
     try {
       const user = await this.validateUserWithOAuth({
         email,
-        firstName,
-        lastName,
+        name,
         password,
         providerName: OAUTH_PROVIDER.EMAIL_PASSWORD,
       });
+      const payload = { email: user.email, sub: user.id, name: user.name };
+      if (!user?.emailVerified) {
+        const token = this.jwtService.sign(payload, {
+          secret: process.env.VERIFY_EMAIL_SECRET + user.email,
+          expiresIn: process.env.VERIFY_EMAIL_EXPIRATION_TIME,
+        });
+        const url = `http://localhost:3000/v1/api/user/${user?.id}/verify-email?token=${token}`;
+        await this.mailService.sendMail(
+          user?.email,
+          { name: user?.name, url },
+          'FUMA! Verify Email',
+          './verify-email',
+        );
+        return ApiSuccessResponse<Token>(
+          true,
+          MESSAGE.mail.success.VERIFY_EMAIL_MAIL_SENT,
+          { token },
+        );
+      }
 
-      const accessToken = await this.getAccessToken({
-        email: user.email,
-        sub: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-      });
+      const accessToken = await this.getAccessToken(payload);
 
-      const refreshToken = await this.getRefreshToken({
-        email: user.email,
-        sub: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-      });
+      const refreshToken = await this.getRefreshToken(payload);
 
-      return ApiSuccessResponse<Token>(
+      return ApiSuccessResponse<AuthToken>(
         true,
-        AUTH_MESSAGE.success.USER_CREATED,
+        MESSAGE.user.success.USER_CREATED,
         {
           accessToken,
           refreshToken,
@@ -105,7 +124,7 @@ export class AuthService {
         if (!user) {
           throwApiErrorResponse({
             response: {
-              message: AUTH_MESSAGE.error.USER_INVALID_EMAIL,
+              message: MESSAGE.user.error.USER_INVALID_EMAIL,
               success: false,
             },
             status: HttpStatus.UNAUTHORIZED,
@@ -118,7 +137,7 @@ export class AuthService {
         if (!isValidPassword) {
           throwApiErrorResponse({
             response: {
-              message: AUTH_MESSAGE.error.USER_INVALID_PASSWORD,
+              message: MESSAGE.user.error.USER_INVALID_PASSWORD,
               success: false,
             },
             status: HttpStatus.UNAUTHORIZED,
@@ -132,14 +151,13 @@ export class AuthService {
     }
   }
 
-  refreshAccessToken(user: User): ApiResponse<Token> {
+  refreshAccessToken(user: User): ApiResponse<AuthToken> {
     const accessToken = this.getAccessToken({
       email: user.email,
       sub: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      name: user.name,
     });
-    return ApiSuccessResponse<Token>(
+    return ApiSuccessResponse<AuthToken>(
       true,
       AUTH_MESSAGE.success.REFRESH_TOKEN_VERIFIED,
       {
@@ -152,10 +170,10 @@ export class AuthService {
     email,
     password = null,
     providerId = null,
-    lastName,
-    firstName,
+    name,
     picture,
     providerName,
+    verified,
   }: UserValidationData): Promise<User> {
     try {
       const user: User = await this.prismaService.user.findUnique({
@@ -169,6 +187,7 @@ export class AuthService {
           },
         },
       });
+
       if (user) {
         const providerExists = user.oAuthProviders.find(
           (elem) => elem.userId === user.id && elem.provider === providerName,
@@ -178,7 +197,7 @@ export class AuthService {
           if (providerName === 'EMAIL_PASSWORD') {
             throwApiErrorResponse({
               response: {
-                message: AUTH_MESSAGE.error.USER_ALREADY_EXISTS,
+                message: MESSAGE.user.error.USER_ALREADY_EXISTS,
                 success: false,
               },
               status: HttpStatus.CONFLICT,
@@ -202,15 +221,17 @@ export class AuthService {
 
         return updatedUser;
       }
+
       const newUser = await this.prismaService.user.create({
         data: {
-          firstName,
-          lastName,
+          name,
           email,
+          ...(verified && { emailVerified: verified }),
           ...(password && { hash: password }),
           ...(picture && { picture }),
         },
       });
+
       await this.prismaService.oAuthProvider.create({
         data: {
           userId: newUser.id,

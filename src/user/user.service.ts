@@ -1,7 +1,8 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { User } from 'src/auth/interface/auth.interface';
+import { User } from './interface/user.interface';
 import { ApiResponse } from 'src/common/interfaces';
 import { MESSAGE } from 'src/common/messages';
+import { USER_MESSAGE } from './message/user.message';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   ApiSuccessResponse,
@@ -16,7 +17,7 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { MailService } from 'src/mail/mail.service';
 import { JwtService } from '@nestjs/jwt';
-import { ForgetPasswordToken } from './type/user.type';
+import { Token } from 'src/common/types';
 
 @Injectable()
 export class UserService {
@@ -31,7 +32,7 @@ export class UserService {
     payload: User,
   ): Promise<ApiResponse<User>> {
     try {
-      if (!profile.firstName && !profile.lastName) {
+      if (!profile.name) {
         throwApiErrorResponse({
           response: {
             message: MESSAGE.general.error.NO_DATA_FOUND,
@@ -43,15 +44,14 @@ export class UserService {
       const user = await this.prismaService.user.update({
         where: { email: payload?.email },
         data: {
-          ...(profile.firstName && { firstName: profile.firstName }),
-          ...(profile.lastName && { lastName: profile.lastName }),
+          ...(profile.name && { name: profile.name }),
           updatedAt: new Date(),
         },
       });
       if (!user) {
         throwApiErrorResponse({
           response: {
-            message: MESSAGE.user.error.USER_NOT_FOUND,
+            message: USER_MESSAGE.error.USER_NOT_FOUND,
             success: false,
           },
           status: HttpStatus.UNAUTHORIZED,
@@ -59,7 +59,7 @@ export class UserService {
       }
       return ApiSuccessResponse<User>(
         true,
-        MESSAGE.user.success.USER_UPDATED,
+        USER_MESSAGE.success.USER_UPDATED,
         user,
       );
     } catch (error) {
@@ -80,7 +80,7 @@ export class UserService {
 
   async forgetPassword({
     email,
-  }: ForgetPasswordDTO): Promise<ApiResponse<ForgetPasswordToken>> {
+  }: ForgetPasswordDTO): Promise<ApiResponse<Token>> {
     try {
       const user = await this.prismaService.user.findUnique({
         where: { email },
@@ -96,7 +96,7 @@ export class UserService {
       if (!user) {
         throwApiErrorResponse({
           response: {
-            message: MESSAGE.user.error.USER_INVALID_EMAIL,
+            message: USER_MESSAGE.error.USER_INVALID_EMAIL,
             success: false,
           },
           status: HttpStatus.BAD_REQUEST,
@@ -105,7 +105,7 @@ export class UserService {
       if (!user?.hash) {
         throwApiErrorResponse({
           response: {
-            message: MESSAGE.user.error.USER_MISSING_PASSWORD,
+            message: USER_MESSAGE.error.USER_MISSING_PASSWORD,
             success: false,
             data: user?.oAuthProviders,
           },
@@ -115,21 +115,25 @@ export class UserService {
       const payload = {
         sub: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
       };
       const token = this.jwtService.sign(payload, {
         secret: process.env.JWT_FORGET_PASSWORD_SECRET + user.hash,
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
       const url = `http://localhost:3000/v1/api/user/${payload?.sub}/forget-password?token=${token}`;
-      await this.mailService.sendMail(payload?.email, {
-        url,
-        name: payload?.firstName,
-      });
-      return ApiSuccessResponse<ForgetPasswordToken>(
+      await this.mailService.sendMail(
+        payload?.email,
+        {
+          url,
+          name: payload?.name,
+        },
+        'FUMA! Forget your password?',
+        './forget-password',
+      );
+      return ApiSuccessResponse<Token>(
         true,
-        MESSAGE.general.success.EMAIL_SENT,
+        MESSAGE.mail.success.FORGET_PASSWORD_MAIL_SENT,
         { token },
       );
     } catch (error) {
@@ -140,6 +144,35 @@ export class UserService {
   async updateForgetPassword(payload: UpdateForgetPasswordDTO, user) {
     try {
       return await this.passwordLookup(payload, user);
+    } catch (error) {
+      throwApiErrorResponse(error);
+    }
+  }
+
+  async verifyEmail(user: User): Promise<ApiResponse<null>> {
+    try {
+      if (user?.emailVerified) {
+        throwApiErrorResponse({
+          response: {
+            message: USER_MESSAGE.error.USER_EMAIL_ALREADY_VERIFIED,
+            success: false,
+          },
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+      await this.prismaService.user.update({
+        where: { email: user.email },
+        data: {
+          emailVerified: true,
+          updatedAt: new Date(),
+        },
+      });
+
+      return ApiSuccessResponse<null>(
+        true,
+        USER_MESSAGE.success.USER_EMAIL_VERIFIED,
+        null,
+      );
     } catch (error) {
       throwApiErrorResponse(error);
     }
@@ -157,7 +190,7 @@ export class UserService {
         if (!(await bcrypt.compare(credential.oldPassword, user.hash))) {
           throwApiErrorResponse({
             response: {
-              message: MESSAGE.user.error.USER_INVALID_PASSWORD,
+              message: USER_MESSAGE.error.USER_INVALID_PASSWORD,
               success: false,
             },
             status: HttpStatus.BAD_REQUEST,
@@ -168,7 +201,7 @@ export class UserService {
       if (await bcrypt.compare(credential.newPassword, user.hash)) {
         throwApiErrorResponse({
           response: {
-            message: MESSAGE.user.error.USER_SAME_PASSWORD,
+            message: USER_MESSAGE.error.USER_SAME_PASSWORD,
             success: false,
           },
           status: HttpStatus.BAD_REQUEST,
@@ -185,7 +218,7 @@ export class UserService {
 
       return ApiSuccessResponse(
         true,
-        MESSAGE.user.success.USER_PASSWORD_UPDATED,
+        USER_MESSAGE.success.USER_PASSWORD_UPDATED,
       );
     } catch (error) {
       throwApiErrorResponse(error);

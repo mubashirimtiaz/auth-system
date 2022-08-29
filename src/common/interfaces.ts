@@ -1,6 +1,11 @@
 import { Request } from 'express';
-import { User } from 'src/auth/interface/auth.interface';
+import { User } from 'src/user/interface/user.interface';
 
+//USER
+export { User } from 'src/user/interface/user.interface';
+//USER
+
+//GENERAL
 export interface StrategyRequestHandler extends Request {
   user: User;
 }
@@ -10,3 +15,4 @@ export interface ApiResponse<T> {
   message: string;
   data?: T;
 }
+//GENERAL

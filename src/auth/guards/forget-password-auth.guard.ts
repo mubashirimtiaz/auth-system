@@ -2,6 +2,7 @@ import { ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiErrorResponse } from 'src/common/classes';
 import { throwApiErrorResponse } from 'src/common/functions';
+import { MESSAGE } from 'src/common/messages';
 import { AUTH_MESSAGE } from '../message/auth.message';
 
 @Injectable()
@@ -47,7 +48,7 @@ export class JwtForgetPasswordGuard extends AuthGuard(
       throw (
         error ||
         new ApiErrorResponse(
-          { message: AUTH_MESSAGE.error.USER_NOT_FOUND, success: false },
+          { message: MESSAGE.user.error.USER_NOT_FOUND, success: false },
           HttpStatus.UNAUTHORIZED,
         )
       );

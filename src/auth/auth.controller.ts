@@ -1,17 +1,11 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
-import { StrategyRequestHandler } from 'src/common/interfaces';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { User } from 'src/common/interfaces';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt-refresh-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { SignInDTO, SignUpDTO } from './dto/auth.dto';
+import { RefreshTokenDTO, SignInDTO, SignUpDTO } from './dto/auth.dto';
+import DECORATORS from 'src/common/decorators';
 
 @Controller('auth')
 export class AuthController {
@@ -19,9 +13,11 @@ export class AuthController {
 
   @Post('signin')
   @UseGuards(LocalAuthGuard)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async login(@Request() req: StrategyRequestHandler, @Body() _: SignInDTO) {
-    return this.authService.login(req.user);
+  async login(
+    @DECORATORS.user.params.Payload() user: User,
+    @Body() _: SignInDTO,
+  ) {
+    return this.authService.login(user);
   }
 
   @Post('signup')
@@ -31,18 +27,21 @@ export class AuthController {
 
   @Post('refresh')
   @UseGuards(JwtRefreshAuthGuard)
-  refreshAccessToken(@Request() req: StrategyRequestHandler) {
-    return this.authService.refreshAccessToken(req.user);
+  refreshAccessToken(
+    @DECORATORS.user.params.Payload() user: User,
+    @Body() _: RefreshTokenDTO,
+  ) {
+    return this.authService.refreshAccessToken(user);
   }
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
   // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-  async googleAuth(@Request() _: StrategyRequestHandler) {}
+  async googleAuth(@DECORATORS.user.params.Payload() user: User) {}
 
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
-  googleAuthRedirect(@Request() req: StrategyRequestHandler) {
-    return this.authService.login(req.user);
+  googleAuthRedirect(@DECORATORS.user.params.Payload() user: User) {
+    return this.authService.login(user);
   }
 }

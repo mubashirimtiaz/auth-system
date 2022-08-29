@@ -1,16 +1,21 @@
 import { AUTH_MESSAGE } from 'src/auth/message/auth.message';
+import { MAIL_MESSAGE } from 'src/mail/message/mail.message';
+import { USER_MESSAGE } from 'src/user/message/user.message';
 export const MESSAGE = {
+  //AUTH
+  auth: AUTH_MESSAGE,
   //USER
-  user: AUTH_MESSAGE,
+  user: USER_MESSAGE,
+  //MAIL
+  mail: MAIL_MESSAGE,
   //GENERAL
   general: {
     //SUCCESS
-    success: {
-      EMAIL_SENT: 'Email sent successfully',
-    },
+    success: {},
     //ERROR
     error: {
       NO_DATA_FOUND: 'No data found',
+      VALIDATION_FAILED: 'Validation failed',
     },
   },
   //SERVER
@@ -22,4 +27,10 @@ export const MESSAGE = {
       INTERNAL_SERVER_ERROR: 'Internal server error',
     },
   },
+};
+
+export const messageMap = {
+  'jwt expired': MESSAGE.auth.error.AUTH_TOKEN_EXPIRED,
+  'No auth token': MESSAGE.auth.error.AUTH_TOKEN_MISSING,
+  'invalid signature': MESSAGE.auth.error.AUTH_TOKEN_INVALID,
 };

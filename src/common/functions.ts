@@ -34,6 +34,25 @@ export const throwApiErrorResponse = <T>(error: {
       success: error?.response?.success || false,
       ...(error?.response?.data && { data: error?.response?.data }),
     },
-    error?.status || HttpStatus.BAD_REQUEST,
+    error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
   );
+};
+
+export const validationPipeException = (errors) => {
+  const constraint = errors.reduce(
+    (acc, curr) => ({
+      ...acc,
+      [curr?.property]: Object.values(curr?.constraints),
+    }),
+    {},
+  );
+
+  throwApiErrorResponse({
+    response: {
+      message: MESSAGE.general.error.VALIDATION_FAILED,
+      success: false,
+      data: constraint,
+    },
+    status: HttpStatus.NOT_ACCEPTABLE,
+  });
 };

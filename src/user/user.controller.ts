@@ -2,13 +2,12 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
-  Request,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { StrategyRequestHandler } from 'src/common/interfaces';
 import { ApiSuccessResponse } from 'src/common/functions';
 import {
   ForgetPasswordDTO,
@@ -16,61 +15,86 @@ import {
   UpdatePasswordDTO,
   UpdateProfileDTO,
 } from './dto/user.dto';
-import { ForgetPasswordInterceptor } from './interceptor/user.interceptor';
+import { ForgetPasswordInterceptor } from './interceptor/forget-password.interceptor';
 import { UserService } from './user.service';
-import { User } from 'src/auth/interface/auth.interface';
 import { MESSAGE } from 'src/common/messages';
+import { User } from './interface/user.interface';
+import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
+import DECORATOR from './decorator/user.decorator';
+import { ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { MongoIdDTO } from 'src/common/dtos';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @ApiBearerAuth()
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  getProfile(@Request() req: StrategyRequestHandler) {
+  getProfile(@DECORATOR.params.Payload() user: User) {
     return ApiSuccessResponse<Partial<User>>(
       true,
       MESSAGE.user.success.USER_FOUND,
-      req.user,
+      user,
     );
   }
 
+  @ApiBearerAuth()
   @Post('update-profile')
   @UseGuards(JwtAuthGuard)
   updateProfile(
-    @Request() req: StrategyRequestHandler,
+    @DECORATOR.params.Payload() user: User,
     @Body() body: UpdateProfileDTO,
   ) {
-    return this.userService.updateProfile(body, req.user);
+    return this.userService.updateProfile(body, user);
   }
 
+  @ApiBearerAuth()
   @Post('update-password')
   @UseGuards(JwtAuthGuard)
   updatePassword(
-    @Request() req: StrategyRequestHandler,
+    @DECORATOR.params.Payload() user: User,
     @Body() body: UpdatePasswordDTO,
   ) {
-    return this.userService.updatePassword(body, req.user);
+    return this.userService.updatePassword(body, user);
   }
+
   @Post('forget-password')
   forgetPassword(@Body() { email }: ForgetPasswordDTO) {
     return this.userService.forgetPassword({ email });
   }
+
+  @ApiQuery({ name: 'token', required: true })
+  @ApiParam({ name: 'id', required: true })
   @Get(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
-  getForgetPassword(@Request() req: StrategyRequestHandler) {
+  getForgetPassword(
+    @DECORATOR.params.Payload() user: User,
+    @Param() _: MongoIdDTO,
+  ) {
     return ApiSuccessResponse<Partial<User>>(
       true,
       MESSAGE.user.success.USER_FOUND,
-      req.user,
+      user,
     );
   }
-
+  @ApiQuery({ name: 'token', required: true })
+  @ApiParam({ name: 'id', required: true })
   @Post(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
-  async updateForgetPassword(
-    @Request() req: StrategyRequestHandler,
+  updateForgetPassword(
+    @DECORATOR.params.Payload() user: User,
     @Body() { newPassword }: UpdateForgetPasswordDTO,
+    @Param() _: MongoIdDTO,
   ) {
-    return this.userService.updateForgetPassword({ newPassword }, req.user);
+    return this.userService.updateForgetPassword({ newPassword }, user);
+  }
+
+  @ApiQuery({ name: 'token', required: true })
+  @ApiParam({ name: 'id', required: true })
+  @Get(':id/verify-email')
+  @UseInterceptors(VerifyEmailInterceptor)
+  verifyEmail(@DECORATOR.params.Payload() user: User, @Param() _: MongoIdDTO) {
+    return this.userService.verifyEmail(user);
   }
 }
