@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   UseGuards,
   UseInterceptors,
@@ -21,6 +22,7 @@ import { User } from './interface/user.interface';
 import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
 import DECORATOR from './decorator/user.decorator';
 import { ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { MongoIdDTO } from 'src/common/dtos';
 
 @Controller('user')
 export class UserController {
@@ -66,7 +68,10 @@ export class UserController {
   @ApiParam({ name: 'id', required: true })
   @Get(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
-  getForgetPassword(@DECORATOR.params.Payload() user: User) {
+  getForgetPassword(
+    @DECORATOR.params.Payload() user: User,
+    @Param() _: MongoIdDTO,
+  ) {
     return ApiSuccessResponse<Partial<User>>(
       true,
       MESSAGE.user.success.USER_FOUND,
@@ -80,6 +85,7 @@ export class UserController {
   updateForgetPassword(
     @DECORATOR.params.Payload() user: User,
     @Body() { newPassword }: UpdateForgetPasswordDTO,
+    @Param() _: MongoIdDTO,
   ) {
     return this.userService.updateForgetPassword({ newPassword }, user);
   }
@@ -88,7 +94,7 @@ export class UserController {
   @ApiParam({ name: 'id', required: true })
   @Get(':id/verify-email')
   @UseInterceptors(VerifyEmailInterceptor)
-  verifyEmail(@DECORATOR.params.Payload() user: User) {
+  verifyEmail(@DECORATOR.params.Payload() user: User, @Param() _: MongoIdDTO) {
     return this.userService.verifyEmail(user);
   }
 }
