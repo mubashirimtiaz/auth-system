@@ -13,6 +13,8 @@ lerna-debug.log*
 
 # env
 .env
+env.list
+
 
 # OS
 .DS_Store
@@ -37,6 +39,3 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-#docker
-.dockerignore
-Dockerfile
