@@ -1,4 +1,4 @@
-export const MAIL_MESSAGE = {
+export const SES_MESSAGE = {
   //SUCCESS
   success: {
     FORGET_PASSWORD_MAIL_SENT: 'Forget password mail sent successfully',

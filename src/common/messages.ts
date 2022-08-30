@@ -1,5 +1,5 @@
 import { AUTH_MESSAGE } from 'src/auth/message/auth.message';
-import { MAIL_MESSAGE } from 'src/mail/message/mail.message';
+import { SES_MESSAGE } from 'src/aws/ses/message/ses.message';
 import { USER_MESSAGE } from 'src/user/message/user.message';
 export const MESSAGE = {
   //AUTH
@@ -7,7 +7,7 @@ export const MESSAGE = {
   //USER
   user: USER_MESSAGE,
   //MAIL
-  mail: MAIL_MESSAGE,
+  mail: SES_MESSAGE,
   //GENERAL
   general: {
     //SUCCESS

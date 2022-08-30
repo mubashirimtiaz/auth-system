@@ -10,7 +10,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtForgetPasswordStrategy } from './strategies/forget-password.strategy';
-import { MailModule } from 'src/mail/mail.module';
+import { AwsModule } from 'src/aws/aws.module';
 
 @Module({
   providers: [
@@ -22,7 +22,7 @@ import { MailModule } from 'src/mail/mail.module';
     JwtForgetPasswordStrategy,
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
   ],
-  imports: [PrismaModule, PassportModule, JwtModule, MailModule],
+  imports: [PrismaModule, PassportModule, JwtModule, AwsModule],
   exports: [AuthService],
   controllers: [AuthController],
 })
