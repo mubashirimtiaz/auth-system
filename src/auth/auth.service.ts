@@ -15,15 +15,15 @@ import {
 import { ApiResponse } from 'src/common/interfaces';
 import { AUTH_MESSAGE } from './message/auth.message';
 import { MESSAGE } from 'src/common/messages';
-import { MailService } from 'src/mail/mail.service';
 import { Token } from 'src/common/types';
+import { SesService } from 'src/aws/ses/ses.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prismaService: PrismaService,
     private jwtService: JwtService,
-    private mailService: MailService,
+    private sesService: SesService,
   ) {}
 
   async login(payload: User): Promise<ApiResponse<AuthToken>> {
@@ -76,11 +76,18 @@ export class AuthService {
           expiresIn: process.env.VERIFY_EMAIL_EXPIRATION_TIME,
         });
         const url = `http://localhost:3000/v1/api/user/${user?.id}/verify-email?token=${token}`;
-        await this.mailService.sendMail(
+        await this.sesService.sendMail(
           user?.email,
           { name: user?.name, url },
           'FUMA! Verify Email',
-          './verify-email',
+          `<p>Hey ${user?.name},</p>
+          <h2>Verify your email</h2>
+          <p>Please click below to verify your email</p>
+          <p>
+            <a href=${url}>Verify EMAIL</a>
+          </p>
+          
+          <p>If you did not request this email you can safely ignore it.</p>`,
         );
         return ApiSuccessResponse<Token>(
           true,

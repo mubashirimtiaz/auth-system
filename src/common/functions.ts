@@ -24,13 +24,16 @@ export const getRequiredProperties = (
 };
 
 export const throwApiErrorResponse = <T>(error: {
-  response: ApiResponse<T>;
+  response?: ApiResponse<T>;
+  message?: string;
   status: HttpStatus;
 }) => {
   throw new ApiErrorResponse(
     {
       message:
-        error?.response?.message || MESSAGE.server.error.INTERNAL_SERVER_ERROR,
+        error?.response?.message ||
+        error?.message ||
+        MESSAGE.server.error.INTERNAL_SERVER_ERROR,
       success: error?.response?.success || false,
       ...(error?.response?.data && { data: error?.response?.data }),
     },
