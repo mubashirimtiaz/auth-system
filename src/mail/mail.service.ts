@@ -1,5 +1,6 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
+import { throwApiErrorResponse } from 'src/common/functions';
 
 @Injectable()
 export class MailService {
@@ -11,11 +12,15 @@ export class MailService {
     subject: string,
     template: string,
   ) {
-    await this.mailerService.sendMail({
-      to: email,
-      subject,
-      template,
-      context,
-    });
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject,
+        template,
+        context,
+      });
+    } catch (error) {
+      throwApiErrorResponse(error);
+    }
   }
 }

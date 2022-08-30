@@ -106,6 +106,21 @@ export class AuthService {
     }
   }
 
+  refreshAccessToken(user: User): ApiResponse<AuthToken> {
+    const accessToken = this.getAccessToken({
+      email: user.email,
+      sub: user.id,
+      name: user.name,
+    });
+    return ApiSuccessResponse<AuthToken>(
+      true,
+      AUTH_MESSAGE.success.REFRESH_TOKEN_VERIFIED,
+      {
+        accessToken,
+      },
+    );
+  }
+
   async validateUser(
     payload: SignInDTO | JwtTOKEN,
     strategy: StrategyType,
@@ -132,7 +147,7 @@ export class AuthService {
         }
         const isValidPassword = await bcrypt.compare(
           payload.password,
-          user.hash,
+          user.hash || '',
         );
         if (!isValidPassword) {
           throwApiErrorResponse({
@@ -149,21 +164,6 @@ export class AuthService {
     } catch (error) {
       throwApiErrorResponse(error);
     }
-  }
-
-  refreshAccessToken(user: User): ApiResponse<AuthToken> {
-    const accessToken = this.getAccessToken({
-      email: user.email,
-      sub: user.id,
-      name: user.name,
-    });
-    return ApiSuccessResponse<AuthToken>(
-      true,
-      AUTH_MESSAGE.success.REFRESH_TOKEN_VERIFIED,
-      {
-        accessToken,
-      },
-    );
   }
 
   async validateUserWithOAuth({
