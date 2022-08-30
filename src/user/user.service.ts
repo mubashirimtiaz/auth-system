@@ -15,16 +15,16 @@ import {
   UpdateProfileDTO,
 } from './dto/user.dto';
 import * as bcrypt from 'bcryptjs';
-import { MailService } from 'src/mail/mail.service';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from 'src/common/types';
+import { SesService } from 'src/aws/ses/ses.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly mailService: MailService,
     private readonly jwtService: JwtService,
+    private readonly sesService: SesService,
   ) {}
 
   async updateProfile(
@@ -122,14 +122,21 @@ export class UserService {
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
       const url = `http://localhost:3000/v1/api/user/${payload?.sub}/forget-password?token=${token}`;
-      await this.mailService.sendMail(
+      await this.sesService.sendMail(
         payload?.email,
         {
           url,
           name: payload?.name,
         },
         'FUMA! Forget your password?',
-        './forget-password',
+        `<p>Hey ${payload?.name},</p>
+        <h2>Forget Password?</h2>
+        <p>Please click below to change your password</p>
+        <p>
+          <a href=${url}>Change Password</a>
+        </p>
+
+        <p>If you did not request this email you can safely ignore it.</p>`,
       );
       return ApiSuccessResponse<Token>(
         true,
