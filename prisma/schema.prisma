@@ -9,7 +9,7 @@ datasource db {
 
 enum OAUTH_PROVIDER {
   GOOGLE
-  FACEBOOK
+  MICROSOFT
   GITHUB
   EMAIL_PASSWORD
 }

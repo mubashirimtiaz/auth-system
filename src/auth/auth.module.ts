@@ -11,6 +11,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtForgetPasswordStrategy } from './strategies/forget-password.strategy';
 import { AwsModule } from 'src/aws/aws.module';
+import { GithubStrategy } from './strategies/github-strategy';
 
 @Module({
   providers: [
@@ -20,6 +21,7 @@ import { AwsModule } from 'src/aws/aws.module';
     GoogleStrategy,
     JwtRefreshStrategy,
     JwtForgetPasswordStrategy,
+    GithubStrategy,
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
   ],
   imports: [PrismaModule, PassportModule, JwtModule, AwsModule],
