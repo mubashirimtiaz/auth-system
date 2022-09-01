@@ -7,6 +7,7 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenDTO, SignInDTO, SignUpDTO } from './dto/auth.dto';
 import DECORATORS from 'src/common/decorators';
 import { GithubAuthGuard } from './guards/github-auth.guard';
+import { MicrosoftAuthGuard } from './guards/microsoft-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -54,6 +55,17 @@ export class AuthController {
   @Get('github/redirect')
   @UseGuards(GithubAuthGuard)
   githubAuthRedirect(@DECORATORS.user.params.Payload() user: User) {
+    return this.authService.login(user);
+  }
+
+  @Get('microsoft')
+  @UseGuards(MicrosoftAuthGuard)
+  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+  async microsoftAuth(@DECORATORS.user.params.Payload() user: User) {}
+
+  @Get('microsoft/redirect')
+  @UseGuards(MicrosoftAuthGuard)
+  microsoftAuthRedirect(@DECORATORS.user.params.Payload() user: User) {
     return this.authService.login(user);
   }
 }
