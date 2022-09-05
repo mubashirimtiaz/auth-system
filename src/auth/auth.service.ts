@@ -135,6 +135,13 @@ export class AuthService {
     try {
       const user: User = await this.prismaService.user.findUnique({
         where: { email: payload.email },
+        include: {
+          oAuthProviders: {
+            select: {
+              provider: true,
+            },
+          },
+        },
       });
 
       if (user && strategy === StrategyType.JWT) {
@@ -152,9 +159,23 @@ export class AuthService {
             status: HttpStatus.UNAUTHORIZED,
           });
         }
+
+        if (!user?.hash) {
+          const providers = user?.oAuthProviders?.map(
+            (elem) => elem.provider,
+          ) as string[];
+
+          throwApiErrorResponse({
+            response: {
+              message: MESSAGE.user.error.USER_MISSING_PASSWORD(providers),
+              success: false,
+            },
+            status: HttpStatus.UNAUTHORIZED,
+          });
+        }
         const isValidPassword = await bcrypt.compare(
           payload.password,
-          user.hash || '',
+          user.hash,
         );
         if (!isValidPassword) {
           throwApiErrorResponse({
@@ -165,6 +186,7 @@ export class AuthService {
             status: HttpStatus.UNAUTHORIZED,
           });
         }
+
         return user;
       }
       return null;

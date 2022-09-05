@@ -5,6 +5,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import { AuthService } from 'src/auth/auth.service';
@@ -56,10 +57,16 @@ export class ForgetPasswordInterceptor implements NestInterceptor {
           status: HttpStatus.BAD_REQUEST,
         });
       }
+      const hash =
+        user.hash ??
+        bcrypt.hashSync(
+          user.email + user.hash,
+          process.env.FORGET_PASSWORD_SALT,
+        );
 
       await this.jwtService.verify(token, {
         ignoreExpiration: false,
-        secret: process.env.JWT_FORGET_PASSWORD_SECRET + user.hash,
+        secret: process.env.JWT_FORGET_PASSWORD_SECRET + hash,
       });
 
       request.user = user;

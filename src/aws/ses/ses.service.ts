@@ -34,8 +34,6 @@ export class SesService {
     try {
       await this.ses.sendEmail(params).promise();
     } catch (error) {
-      console.log(error);
-
       throwApiErrorResponse(error);
     }
   }
