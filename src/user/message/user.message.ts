@@ -19,9 +19,9 @@ export const USER_MESSAGE = {
     USER_INVALID_EMAIL: 'Invalid email',
     USER_EMAIL_NOT_VERIFIED: 'Email is not verified',
     USER_INVALID_NAME: 'name must contain only letters (a-zA-Z)',
+    USER_MISSING_PASSWORD: (...params) =>
+      `This account can only be logged into with ${params}. Or by resetting the password with "Forgot Password".`,
     USER_EMAIL_ALREADY_VERIFIED: 'Email is already verified',
     USER_SAME_PASSWORD: 'New password is same as old password',
-    USER_MISSING_PASSWORD:
-      "You don't have a password. Please sign in with your provider",
   },
 };
