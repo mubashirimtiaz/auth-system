@@ -18,6 +18,7 @@ import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from 'src/common/types';
 import { SesService } from 'src/aws/ses/ses.service';
+import { PASSWORD_CHANGE_TYPE } from './type/user.type';
 
 @Injectable()
 export class UserService {
@@ -41,6 +42,7 @@ export class UserService {
           status: HttpStatus.BAD_REQUEST,
         });
       }
+
       const user = await this.prismaService.user.update({
         where: { email: payload?.email },
         data: {
@@ -72,7 +74,11 @@ export class UserService {
     user: User,
   ): Promise<ApiResponse<null>> {
     try {
-      return await this.passwordLookup(credential, user);
+      return await this.passwordLookup(
+        credential,
+        user,
+        PASSWORD_CHANGE_TYPE.UPDATE,
+      );
     } catch (error) {
       throwApiErrorResponse(error);
     }
@@ -102,23 +108,20 @@ export class UserService {
           status: HttpStatus.BAD_REQUEST,
         });
       }
-      if (!user?.hash) {
-        throwApiErrorResponse({
-          response: {
-            message: USER_MESSAGE.error.USER_MISSING_PASSWORD,
-            success: false,
-            data: user?.oAuthProviders,
-          },
-          status: HttpStatus.BAD_REQUEST,
-        });
-      }
       const payload = {
         sub: user.id,
         email: user.email,
         name: user.name,
       };
+      const hash =
+        user.hash ??
+        bcrypt.hashSync(
+          user.email + user.hash,
+          process.env.FORGET_PASSWORD_SALT,
+        );
+
       const token = this.jwtService.sign(payload, {
-        secret: process.env.JWT_FORGET_PASSWORD_SECRET + user.hash,
+        secret: process.env.JWT_FORGET_PASSWORD_SECRET + hash,
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
       const url = `http://localhost:3000/v1/api/user/${payload?.sub}/forget-password?token=${token}`;
@@ -150,7 +153,11 @@ export class UserService {
 
   async updateForgetPassword(payload: UpdateForgetPasswordDTO, user) {
     try {
-      return await this.passwordLookup(payload, user);
+      return await this.passwordLookup(
+        payload,
+        user,
+        PASSWORD_CHANGE_TYPE.FORGET,
+      );
     } catch (error) {
       throwApiErrorResponse(error);
     }
@@ -191,9 +198,10 @@ export class UserService {
       newPassword: string;
     },
     user: User,
+    type: PASSWORD_CHANGE_TYPE,
   ): Promise<ApiResponse<null>> {
     try {
-      if (credential?.oldPassword) {
+      if (type === PASSWORD_CHANGE_TYPE.UPDATE) {
         if (!(await bcrypt.compare(credential.oldPassword, user.hash))) {
           throwApiErrorResponse({
             response: {
@@ -203,16 +211,15 @@ export class UserService {
             status: HttpStatus.BAD_REQUEST,
           });
         }
-      }
-
-      if (await bcrypt.compare(credential.newPassword, user.hash)) {
-        throwApiErrorResponse({
-          response: {
-            message: USER_MESSAGE.error.USER_SAME_PASSWORD,
-            success: false,
-          },
-          status: HttpStatus.BAD_REQUEST,
-        });
+        if (await bcrypt.compare(credential.newPassword, user.hash)) {
+          throwApiErrorResponse({
+            response: {
+              message: USER_MESSAGE.error.USER_SAME_PASSWORD,
+              success: false,
+            },
+            status: HttpStatus.BAD_REQUEST,
+          });
+        }
       }
 
       await this.prismaService.user.update({

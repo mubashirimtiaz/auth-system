@@ -1,0 +1,4 @@
+export enum PASSWORD_CHANGE_TYPE {
+  UPDATE = 'UPDATE',
+  FORGET = 'FORGET',
+}
