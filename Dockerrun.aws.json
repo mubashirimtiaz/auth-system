@@ -1,0 +1,16 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Authentication": {
+    "bucket": "fuma-docker-login-bucket",
+    "key": "dockercfg"
+  },
+  "Image": {
+    "Name": "fumaai/fuma-api:latest",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": "3000"
+    }
+  ]
+}
