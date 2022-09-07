@@ -11,7 +11,9 @@ export const MESSAGE = {
   //GENERAL
   general: {
     //SUCCESS
-    success: {},
+    success: {
+      HEALTH_CHECK: 'Health check completed successfully',
+    },
     //ERROR
     error: {
       NO_DATA_FOUND: 'No data found',
