@@ -70,6 +70,7 @@ export class UserController {
   @UseInterceptors(ForgetPasswordInterceptor)
   getForgetPassword(
     @DECORATOR.params.Payload() user: User,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Param() _: MongoIdDTO,
   ) {
     return ApiSuccessResponse<Partial<User>>(
@@ -85,6 +86,7 @@ export class UserController {
   updateForgetPassword(
     @DECORATOR.params.Payload() user: User,
     @Body() { newPassword }: UpdateForgetPasswordDTO,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Param() _: MongoIdDTO,
   ) {
     return this.userService.updateForgetPassword({ newPassword }, user);
@@ -94,6 +96,7 @@ export class UserController {
   @ApiParam({ name: 'id', required: true })
   @Get(':id/verify-email')
   @UseInterceptors(VerifyEmailInterceptor)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   verifyEmail(@DECORATOR.params.Payload() user: User, @Param() _: MongoIdDTO) {
     return this.userService.verifyEmail(user);
   }

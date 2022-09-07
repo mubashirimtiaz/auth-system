@@ -17,6 +17,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   async login(
     @DECORATORS.user.params.Payload() user: User,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Body() _: SignInDTO,
   ) {
     return this.authService.login(user);
@@ -31,6 +32,7 @@ export class AuthController {
   @UseGuards(JwtRefreshAuthGuard)
   refreshAccessToken(
     @DECORATORS.user.params.Payload() user: User,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Body() _: RefreshTokenDTO,
   ) {
     return this.authService.refreshAccessToken(user);

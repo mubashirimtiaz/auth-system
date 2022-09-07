@@ -3,7 +3,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiErrorResponse } from 'src/common/classes';
 import { throwApiErrorResponse } from 'src/common/functions';
 import { MESSAGE } from 'src/common/messages';
-import { AUTH_MESSAGE } from '../message/auth.message';
 
 @Injectable()
 export class LocalAuthGuard extends AuthGuard('local') {
