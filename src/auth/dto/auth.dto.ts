@@ -27,7 +27,7 @@ export class SignUpDTO {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  @MinLength(6)
+  @MinLength(8)
   @MaxLength(18)
   password: string;
 }
