@@ -13,6 +13,8 @@ export class SignUpDTO {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  @MinLength(3)
+  @MaxLength(30)
   @Matches(/^[a-zA-Z ]+$/, {
     message: MESSAGE.user.error.USER_INVALID_NAME,
   })
@@ -28,7 +30,10 @@ export class SignUpDTO {
   @IsString()
   @IsNotEmpty()
   @MinLength(8)
-  @MaxLength(18)
+  @MaxLength(16)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.)/, {
+    message: MESSAGE.user.error.USER_INVALID_PASSWORD_SCHEMA,
+  })
   password: string;
 }
 
