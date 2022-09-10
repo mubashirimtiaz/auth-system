@@ -14,7 +14,7 @@ export class TransformResInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((res) => {
         if (res?.data) {
-          const data = getRequiredProperties(res.data, ['hash']);
+          const data = getRequiredProperties(res.data, ['hash', 'code']);
           return { ...res, data };
         }
         return res;

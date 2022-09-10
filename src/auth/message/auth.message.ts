@@ -7,6 +7,6 @@ export const AUTH_MESSAGE = {
   error: {
     AUTH_TOKEN_MISSING: 'Missing authorization token',
     AUTH_TOKEN_EXPIRED: 'Expired token',
-    AUTH_TOKEN_INVALID: 'Invalid Token',
+    AUTH_TOKEN_INVALID: 'Invalid token',
   },
 };
