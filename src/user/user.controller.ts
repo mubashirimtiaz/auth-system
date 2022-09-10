@@ -65,6 +65,7 @@ export class UserController {
   }
 
   @ApiQuery({ name: 'token', required: true })
+  @ApiQuery({ name: 'code', required: true })
   @ApiParam({ name: 'id', required: true })
   @Get(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
@@ -80,6 +81,7 @@ export class UserController {
     );
   }
   @ApiQuery({ name: 'token', required: true })
+  @ApiQuery({ name: 'code', required: true })
   @ApiParam({ name: 'id', required: true })
   @Post(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
@@ -93,6 +95,7 @@ export class UserController {
   }
 
   @ApiQuery({ name: 'token', required: true })
+  @ApiQuery({ name: 'code', required: true })
   @ApiParam({ name: 'id', required: true })
   @Get(':id/verify-email')
   @UseInterceptors(VerifyEmailInterceptor)

@@ -19,6 +19,7 @@ import DECORATORS from 'src/common/decorators';
 import { GithubAuthGuard } from './guards/github-auth.guard';
 import { MicrosoftAuthGuard } from './guards/microsoft-auth.guard';
 import { VerifyOauthTokenInterceptor } from './interceptor/verify-oauth-token.interceptor';
+import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -93,7 +94,7 @@ export class AuthController {
     const link = this.authService.oauthRedirect(user);
     res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
   }
-
+  @ApiQuery({ name: 'code', required: true })
   @Get('verify-oauth-code')
   @UseInterceptors(VerifyOauthTokenInterceptor)
   async verifyOauthCode(@DECORATORS.user.params.Payload() user: User) {
