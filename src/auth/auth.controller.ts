@@ -19,8 +19,9 @@ import DECORATORS from 'src/common/decorators';
 import { GithubAuthGuard } from './guards/github-auth.guard';
 import { MicrosoftAuthGuard } from './guards/microsoft-auth.guard';
 import { VerifyOauthTokenInterceptor } from './interceptor/verify-oauth-token.interceptor';
-import { ApiQuery } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
