@@ -77,7 +77,7 @@ export class AuthService {
           secret: process.env.VERIFY_EMAIL_SECRET + user.email,
           expiresIn: process.env.VERIFY_EMAIL_EXPIRATION_TIME,
         });
-        const url = `${this.configService.get('URL')}/v1/api/user/${
+        const url = `${this.configService.get('API_URL')}/v1/api/user/${
           user?.id
         }/verify-email?token=${token}`;
         await this.sesService.sendMail(

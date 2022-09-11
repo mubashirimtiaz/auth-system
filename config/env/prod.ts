@@ -1,5 +1,5 @@
 export const vars = {
-  URL: 'http://fuma-core-api.us-east-1.elasticbeanstalk.com',
+  API_URL: 'http://fuma-core-api.us-east-1.elasticbeanstalk.com',
   VERSION: 'v1',
   STAGE: 'prod',
   DATABASE_URL: process.env.DATABASE_URL,

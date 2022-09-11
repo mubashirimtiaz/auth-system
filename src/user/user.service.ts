@@ -126,7 +126,7 @@ export class UserService {
         secret: process.env.JWT_FORGET_PASSWORD_SECRET + hash,
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
-      const url = `${this.configService.get('URL')}/v1/api/user/${
+      const url = `${this.configService.get('API_URL')}/v1/api/user/${
         payload?.sub
       }/forget-password?token=${token}`;
       await this.sesService.sendMail(

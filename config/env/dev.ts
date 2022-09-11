@@ -1,5 +1,5 @@
 export const vars = {
-  URL: 'http://localhost:3000',
+  API_URL: 'http://localhost:3000',
   VERSION: 'v1',
   STAGE: 'dev',
   DATABASE_URL: process.env.DATABASE_URL,
