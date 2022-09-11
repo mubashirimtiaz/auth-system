@@ -31,7 +31,7 @@ export class SignUpDTO {
   @IsNotEmpty()
   @MinLength(8)
   @MaxLength(16)
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.)/, {
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,16})/, {
     message: MESSAGE.user.error.USER_INVALID_PASSWORD_SCHEMA,
   })
   password: string;

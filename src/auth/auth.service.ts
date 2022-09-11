@@ -324,7 +324,7 @@ export class AuthService {
           oAuthProviders: {
             create: {
               provider: providerName,
-              providerId,
+              ...(providerId && { providerId }),
             },
           },
         },
