@@ -24,6 +24,7 @@ model User {
   updatedAt      DateTime        @default(now())
   oAuthProviders OAuthProvider[]
   picture        String?
+  code           Code?
 }
 
 model OAuthProvider {
@@ -34,4 +35,14 @@ model OAuthProvider {
   providerId String?
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @default(now())
+}
+
+model Code {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @unique
+  user              User    @relation(fields: [userId], references: [id])
+  refresh           String?
+  emailVerification String?
+  registration      String?
+  forgetPassword    String?
 }
