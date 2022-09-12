@@ -21,9 +21,10 @@ import { MESSAGE } from 'src/common/messages';
 import { User } from './interface/user.interface';
 import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
 import DECORATOR from './decorator/user.decorator';
-import { ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { MongoIdDTO } from 'src/common/dtos';
+import { ApiBearerAuth, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('User')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -65,6 +66,7 @@ export class UserController {
   }
 
   @ApiQuery({ name: 'token', required: true })
+  @ApiQuery({ name: 'code', required: true })
   @ApiParam({ name: 'id', required: true })
   @Get(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
@@ -80,6 +82,7 @@ export class UserController {
     );
   }
   @ApiQuery({ name: 'token', required: true })
+  @ApiQuery({ name: 'code', required: true })
   @ApiParam({ name: 'id', required: true })
   @Post(':id/forget-password')
   @UseInterceptors(ForgetPasswordInterceptor)
@@ -93,6 +96,7 @@ export class UserController {
   }
 
   @ApiQuery({ name: 'token', required: true })
+  @ApiQuery({ name: 'code', required: true })
   @ApiParam({ name: 'id', required: true })
   @Get(':id/verify-email')
   @UseInterceptors(VerifyEmailInterceptor)

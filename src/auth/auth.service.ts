@@ -10,6 +10,7 @@ import { StrategyType } from './enum/auth.enum';
 import { AuthToken, UserValidationData } from './type/auth.type';
 import {
   ApiSuccessResponse,
+  generateCode,
   throwApiErrorResponse,
 } from 'src/common/functions';
 import { ApiResponse } from 'src/common/interfaces';
@@ -27,6 +28,23 @@ export class AuthService {
     private sesService: SesService,
     private configService: ConfigService,
   ) {}
+
+  oauthRedirect(user: User): string {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      name: user.name,
+    };
+
+    const code = this.jwtService.sign(payload, {
+      secret: process.env.VERIFY_OAUTH_SECRET + user.code.registration,
+      expiresIn: process.env.VERIFY_OAUTH_EXPIRATION_TIME,
+    });
+    const url = `${this.configService.get(
+      'API_URL',
+    )}/v1/api/auth/verify-oauth-code?code=${code}`;
+    return url;
+  }
 
   async login(payload: User): Promise<ApiResponse<AuthToken>> {
     if (!payload.emailVerified) {
@@ -71,6 +89,7 @@ export class AuthService {
         password,
         providerName: OAUTH_PROVIDER.EMAIL_PASSWORD,
       });
+
       const payload = { email: user.email, sub: user.id, name: user.name };
       if (!user?.emailVerified) {
         const token = this.jwtService.sign(payload, {
@@ -89,6 +108,9 @@ export class AuthService {
           <p>Please click below to verify your email</p>
           <p>
             <a href=${url}>Verify EMAIL</a>
+          </p>
+          <p>CODE:
+            <kbd>${user?.code?.emailVerification}</kbd>
           </p>
           
           <p>If you did not request this email you can safely ignore it.</p>`,
@@ -143,6 +165,14 @@ export class AuthService {
           oAuthProviders: {
             select: {
               provider: true,
+            },
+          },
+          code: {
+            select: {
+              registration: true,
+              emailVerification: true,
+              refresh: true,
+              forgetPassword: true,
             },
           },
         },
@@ -218,6 +248,14 @@ export class AuthService {
               userId: true,
             },
           },
+          code: {
+            select: {
+              registration: true,
+              emailVerification: true,
+              refresh: true,
+              forgetPassword: true,
+            },
+          },
         },
       });
 
@@ -249,6 +287,26 @@ export class AuthService {
                 ...(providerId && { providerId }),
               },
             },
+            code: {
+              update: {
+                registration: generateCode(),
+              },
+            },
+          },
+          include: {
+            oAuthProviders: {
+              select: {
+                provider: true,
+              },
+            },
+            code: {
+              select: {
+                registration: true,
+                emailVerification: true,
+                refresh: true,
+                forgetPassword: true,
+              },
+            },
           },
         });
 
@@ -262,16 +320,37 @@ export class AuthService {
           ...(verified && { emailVerified: verified }),
           ...(password && { hash: password }),
           ...(picture && { picture }),
+          code: {
+            create: {
+              ...(providerName === OAUTH_PROVIDER.EMAIL_PASSWORD
+                ? { emailVerification: generateCode() }
+                : { registration: generateCode() }),
+            },
+          },
+          oAuthProviders: {
+            create: {
+              provider: providerName,
+              ...(providerId && { providerId }),
+            },
+          },
+        },
+        include: {
+          oAuthProviders: {
+            select: {
+              provider: true,
+            },
+          },
+          code: {
+            select: {
+              registration: true,
+              emailVerification: true,
+              refresh: true,
+              forgetPassword: true,
+            },
+          },
         },
       });
 
-      await this.prismaService.oAuthProvider.create({
-        data: {
-          userId: newUser.id,
-          provider: providerName,
-          providerId,
-        },
-      });
       return newUser;
     } catch (error) {
       throwApiErrorResponse(error);

@@ -5,20 +5,21 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
+import { AuthService } from '../auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
-import { AuthService } from 'src/auth/auth.service';
 import { StrategyType } from 'src/auth/enum/auth.enum';
 import { JwtTOKEN } from 'src/auth/interface/auth.interface';
 import { throwApiErrorResponse } from 'src/common/functions';
 import { MESSAGE, messageMap } from 'src/common/messages';
-import { USER_MESSAGE } from '../message/user.message';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class VerifyEmailInterceptor implements NestInterceptor {
+export class VerifyOauthTokenInterceptor implements NestInterceptor {
   constructor(
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
+    private readonly prismaService: PrismaService,
   ) {}
   async intercept(
     context: ExecutionContext,
@@ -27,11 +28,9 @@ export class VerifyEmailInterceptor implements NestInterceptor {
     try {
       const request = context.switchToHttp().getRequest();
 
-      const token: string = request?.query?.token;
       const code: string = request?.query?.code;
-      const userId: string = request?.params?.id;
 
-      if (!token) {
+      if (!code) {
         throwApiErrorResponse({
           response: {
             message: MESSAGE.auth.error.AUTH_TOKEN_MISSING,
@@ -41,35 +40,28 @@ export class VerifyEmailInterceptor implements NestInterceptor {
         });
       }
 
-      const payload = this.jwtService.decode(token) as JwtTOKEN;
+      const payload = this.jwtService.decode(code) as JwtTOKEN;
 
       const user = await this.authService.validateUser(
         payload,
         StrategyType.JWT,
       );
 
-      if (user.id !== userId) {
-        throwApiErrorResponse({
-          response: {
-            message: USER_MESSAGE.error.USER_INVALID_ID,
-            success: false,
-          },
-          status: HttpStatus.BAD_REQUEST,
-        });
-      }
-
-      if (user?.code?.emailVerification !== code) {
-        throwApiErrorResponse({
-          response: {
-            message: MESSAGE.general.error.CODE_INVALID,
-            success: false,
-          },
-          status: HttpStatus.BAD_REQUEST,
-        });
-      }
-      await this.jwtService.verify(token, {
+      await this.jwtService.verify(code, {
         ignoreExpiration: false,
-        secret: process.env.VERIFY_EMAIL_SECRET + user.email,
+        secret:
+          process.env.VERIFY_OAUTH_SECRET + user?.code?.registration || '',
+      });
+
+      await this.prismaService.code.update({
+        where: {
+          userId: user.id,
+        },
+        data: {
+          registration: {
+            unset: true,
+          },
+        },
       });
 
       request.user = user;

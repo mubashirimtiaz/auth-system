@@ -22,7 +22,6 @@ async function bootstrap() {
     .setTitle('FUMA API')
     .setDescription('FUMA API description')
     .setVersion('1.0')
-    .addTag('core')
     .addBearerAuth()
     .build();
 

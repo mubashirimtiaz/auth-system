@@ -6,6 +6,7 @@ import { USER_MESSAGE } from './message/user.message';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   ApiSuccessResponse,
+  generateCode,
   throwApiErrorResponse,
 } from 'src/common/functions';
 import {
@@ -92,14 +93,15 @@ export class UserService {
     try {
       const user = await this.prismaService.user.findUnique({
         where: { email },
-        include: {
-          oAuthProviders: {
-            select: {
-              provider: true,
-            },
-          },
-        },
       });
+
+      const { forgetPassword: forgetPasswordCode } =
+        await this.prismaService.code.update({
+          where: { userId: user.id },
+          data: {
+            forgetPassword: generateCode(),
+          },
+        });
 
       if (!user) {
         throwApiErrorResponse({
@@ -142,6 +144,9 @@ export class UserService {
         <p>
           <a href=${url}>Change Password</a>
         </p>
+        <p>CODE
+          <kbd>${forgetPasswordCode}</kbd>
+        </p>
 
         <p>If you did not request this email you can safely ignore it.</p>`,
       );
@@ -183,6 +188,13 @@ export class UserService {
         data: {
           emailVerified: true,
           updatedAt: new Date(),
+          code: {
+            update: {
+              emailVerification: {
+                unset: true,
+              },
+            },
+          },
         },
       });
 
@@ -231,6 +243,13 @@ export class UserService {
         data: {
           hash: credential.newPassword,
           updatedAt: new Date(),
+          code: {
+            update: {
+              forgetPassword: {
+                unset: true,
+              },
+            },
+          },
         },
       });
 
