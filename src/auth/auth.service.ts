@@ -17,6 +17,7 @@ import { AUTH_MESSAGE } from './message/auth.message';
 import { MESSAGE } from 'src/common/messages';
 import { Token } from 'src/common/types';
 import { SesService } from 'src/aws/ses/ses.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,7 @@ export class AuthService {
     private prismaService: PrismaService,
     private jwtService: JwtService,
     private sesService: SesService,
+    private configService: ConfigService,
   ) {}
 
   async login(payload: User): Promise<ApiResponse<AuthToken>> {
@@ -75,7 +77,9 @@ export class AuthService {
           secret: process.env.VERIFY_EMAIL_SECRET + user.email,
           expiresIn: process.env.VERIFY_EMAIL_EXPIRATION_TIME,
         });
-        const url = `http://localhost:3000/v1/api/user/${user?.id}/verify-email?token=${token}`;
+        const url = `${this.configService.get('API_URL')}/v1/api/user/${
+          user?.id
+        }/verify-email?token=${token}`;
         await this.sesService.sendMail(
           user?.email,
           { name: user?.name, url },
