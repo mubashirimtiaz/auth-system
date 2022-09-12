@@ -20,6 +20,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Token } from 'src/common/types';
 import { SesService } from 'src/aws/ses/ses.service';
 import { PASSWORD_CHANGE_TYPE } from './type/user.type';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserService {
@@ -27,6 +28,7 @@ export class UserService {
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
     private readonly sesService: SesService,
+    private readonly configService: ConfigService,
   ) {}
 
   async updateProfile(
@@ -126,7 +128,9 @@ export class UserService {
         secret: process.env.JWT_FORGET_PASSWORD_SECRET + hash,
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
-      const url = `http://localhost:3000/v1/api/user/${payload?.sub}/forget-password?code=${forgetPasswordCode}&token=${token}`;
+      const url = `${this.configService.get('API_URL')}/v1/api/user/${
+        payload?.sub
+      }/forget-password?token=${token}`;
       await this.sesService.sendMail(
         payload?.email,
         {
