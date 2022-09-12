@@ -29,6 +29,7 @@ export class ForgetPasswordInterceptor implements NestInterceptor {
       const request = context.switchToHttp().getRequest();
 
       const token: string = request?.query?.token;
+      const code: string = request?.query?.code;
       const userId: string = request?.params?.id;
 
       if (!token) {
@@ -63,6 +64,16 @@ export class ForgetPasswordInterceptor implements NestInterceptor {
           user.email + user.hash,
           process.env.FORGET_PASSWORD_SALT,
         );
+
+      if (user?.code?.forgetPassword !== code) {
+        throwApiErrorResponse({
+          response: {
+            message: MESSAGE.general.error.CODE_INVALID,
+            success: false,
+          },
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
 
       await this.jwtService.verify(token, {
         ignoreExpiration: false,

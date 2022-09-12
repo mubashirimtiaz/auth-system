@@ -16,6 +16,8 @@ export const USER_MESSAGE = {
     USER_ID_MISSING: 'Missing user id',
     USER_INVALID_ID: 'Invalid user id',
     USER_INVALID_PASSWORD: 'Invalid password',
+    USER_INVALID_PASSWORD_SCHEMA:
+      'Password must contain at least 1 uppercase, 1 lowercase, 1 number and 1 special character',
     USER_INVALID_EMAIL: 'Invalid email',
     USER_EMAIL_NOT_VERIFIED: 'Email is not verified',
     USER_INVALID_NAME: 'name must contain only letters (a-zA-Z)',

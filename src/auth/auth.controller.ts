@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  Res,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { Response } from 'express';
 import { User } from 'src/common/interfaces';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
@@ -8,7 +18,10 @@ import { RefreshTokenDTO, SignInDTO, SignUpDTO } from './dto/auth.dto';
 import DECORATORS from 'src/common/decorators';
 import { GithubAuthGuard } from './guards/github-auth.guard';
 import { MicrosoftAuthGuard } from './guards/microsoft-auth.guard';
+import { VerifyOauthTokenInterceptor } from './interceptor/verify-oauth-token.interceptor';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -38,15 +51,19 @@ export class AuthController {
     return this.authService.refreshAccessToken(user);
   }
 
-  @Get('google')
   @UseGuards(GoogleAuthGuard)
+  @Get('google')
   // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
   async googleAuth(@DECORATORS.user.params.Payload() user: User) {}
 
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
-  googleAuthRedirect(@DECORATORS.user.params.Payload() user: User) {
-    return this.authService.login(user);
+  async googleAuthRedirect(
+    @DECORATORS.user.params.Payload() user: User,
+    @Res() res: Response,
+  ) {
+    const link = this.authService.oauthRedirect(user);
+    res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
   }
 
   @Get('github')
@@ -56,8 +73,12 @@ export class AuthController {
 
   @Get('github/redirect')
   @UseGuards(GithubAuthGuard)
-  githubAuthRedirect(@DECORATORS.user.params.Payload() user: User) {
-    return this.authService.login(user);
+  githubAuthRedirect(
+    @DECORATORS.user.params.Payload() user: User,
+    @Res() res: Response,
+  ) {
+    const link = this.authService.oauthRedirect(user);
+    res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
   }
 
   @Get('microsoft')
@@ -67,7 +88,17 @@ export class AuthController {
 
   @Get('microsoft/redirect')
   @UseGuards(MicrosoftAuthGuard)
-  microsoftAuthRedirect(@DECORATORS.user.params.Payload() user: User) {
+  microsoftAuthRedirect(
+    @DECORATORS.user.params.Payload() user: User,
+    @Res() res: Response,
+  ) {
+    const link = this.authService.oauthRedirect(user);
+    res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
+  }
+  @ApiQuery({ name: 'code', required: true })
+  @Get('verify-oauth-code')
+  @UseInterceptors(VerifyOauthTokenInterceptor)
+  async verifyOauthCode(@DECORATORS.user.params.Payload() user: User) {
     return this.authService.login(user);
   }
 }
