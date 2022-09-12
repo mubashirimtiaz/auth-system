@@ -6,17 +6,23 @@ import { OAUTH_PROVIDER } from '@prisma/client';
 import { Profile } from 'passport';
 import { throwApiErrorResponse } from 'src/common/functions';
 import { MESSAGE } from 'src/common/messages';
+import { ConfigService } from '@nestjs/config';
 
 interface GoogleProfile extends Profile {
   emails: [{ value: string; verified: boolean }];
 }
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
-  constructor(private readonly authService: AuthService) {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: 'http://localhost:3000/v1/api/auth/google/redirect',
+      callbackURL: `${configService.get(
+        'API_URL',
+      )}/v1/api/auth/google/redirect`,
       scope: ['email', 'profile'],
     });
   }

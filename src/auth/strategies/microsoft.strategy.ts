@@ -6,17 +6,23 @@ import { OAUTH_PROVIDER } from '@prisma/client';
 import { Profile } from 'passport';
 import { throwApiErrorResponse } from 'src/common/functions';
 import { MESSAGE } from 'src/common/messages';
+import { ConfigService } from '@nestjs/config';
 
 interface MicrosoftProfile extends Profile {
   emails: [{ value: string; verified?: boolean }];
 }
 @Injectable()
 export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
-  constructor(private readonly authService: AuthService) {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {
     super({
       clientID: process.env.MICROSOFT_CLIENT_ID,
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-      callbackURL: 'http://localhost:3000/v1/api/auth/microsoft/redirect',
+      callbackURL: `${configService.get(
+        'API_URL',
+      )}/v1/api/auth/microsoft/redirect`,
       scope: ['user.read'],
     });
   }
