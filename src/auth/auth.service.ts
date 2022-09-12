@@ -40,7 +40,9 @@ export class AuthService {
       secret: process.env.VERIFY_OAUTH_SECRET + user.code.registration,
       expiresIn: process.env.VERIFY_OAUTH_EXPIRATION_TIME,
     });
-    const url = `http://localhost:3000/v1/api/auth/verify-oauth-code?code=${code}`;
+    const url = `${this.configService.get(
+      'API_URL',
+    )}/v1/api/auth/verify-oauth-code?code=${code}`;
     return url;
   }
 
