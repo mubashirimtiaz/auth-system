@@ -95,14 +95,6 @@ export class UserService {
         where: { email },
       });
 
-      const { forgetPassword: forgetPasswordCode } =
-        await this.prismaService.code.update({
-          where: { userId: user.id },
-          data: {
-            forgetPassword: generateCode(),
-          },
-        });
-
       if (!user) {
         throwApiErrorResponse({
           response: {
@@ -112,6 +104,15 @@ export class UserService {
           status: HttpStatus.BAD_REQUEST,
         });
       }
+
+      const { forgetPassword: forgetPasswordCode } =
+        await this.prismaService.code.update({
+          where: { userId: user.id },
+          data: {
+            forgetPassword: generateCode(),
+          },
+        });
+
       const payload = {
         sub: user.id,
         email: user.email,
@@ -128,9 +129,9 @@ export class UserService {
         secret: process.env.JWT_FORGET_PASSWORD_SECRET + hash,
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
-      const url = `${this.configService.get('API_URL')}/v1/api/user/${
-        payload?.sub
-      }/forget-password?token=${token}`;
+      const url = `${this.configService.get(
+        'API_URL',
+      )}/v1/api/user/forget-password/reset?token=${token}`;
       await this.sesService.sendMail(
         payload?.email,
         {

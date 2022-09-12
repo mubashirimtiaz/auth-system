@@ -21,8 +21,7 @@ import { MESSAGE } from 'src/common/messages';
 import { User } from './interface/user.interface';
 import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
 import DECORATOR from './decorator/user.decorator';
-import { MongoIdDTO } from 'src/common/dtos';
-import { ApiBearerAuth, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('User')
 @Controller('user')
@@ -60,48 +59,27 @@ export class UserController {
     return this.userService.updatePassword(body, user);
   }
 
-  @Post('forget-password')
+  @Post('forget-password/send-email')
   forgetPassword(@Body() { email }: ForgetPasswordDTO) {
     return this.userService.forgetPassword({ email });
   }
 
   @ApiQuery({ name: 'token', required: true })
   @ApiQuery({ name: 'code', required: true })
-  @ApiParam({ name: 'id', required: true })
-  @Get(':id/forget-password')
-  @UseInterceptors(ForgetPasswordInterceptor)
-  getForgetPassword(
-    @DECORATOR.params.Payload() user: User,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Param() _: MongoIdDTO,
-  ) {
-    return ApiSuccessResponse<Partial<User>>(
-      true,
-      MESSAGE.user.success.USER_FOUND,
-      user,
-    );
-  }
-  @ApiQuery({ name: 'token', required: true })
-  @ApiQuery({ name: 'code', required: true })
-  @ApiParam({ name: 'id', required: true })
-  @Post(':id/forget-password')
+  @Post('forget-password/reset')
   @UseInterceptors(ForgetPasswordInterceptor)
   updateForgetPassword(
     @DECORATOR.params.Payload() user: User,
     @Body() { newPassword }: UpdateForgetPasswordDTO,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Param() _: MongoIdDTO,
   ) {
     return this.userService.updateForgetPassword({ newPassword }, user);
   }
 
   @ApiQuery({ name: 'token', required: true })
   @ApiQuery({ name: 'code', required: true })
-  @ApiParam({ name: 'id', required: true })
-  @Get(':id/verify-email')
+  @Get('verify')
   @UseInterceptors(VerifyEmailInterceptor)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  verifyEmail(@DECORATOR.params.Payload() user: User, @Param() _: MongoIdDTO) {
+  verifyEmail(@DECORATOR.params.Payload() user: User) {
     return this.userService.verifyEmail(user);
   }
 }

@@ -12,7 +12,6 @@ import { StrategyType } from 'src/auth/enum/auth.enum';
 import { JwtTOKEN } from 'src/auth/interface/auth.interface';
 import { throwApiErrorResponse } from 'src/common/functions';
 import { MESSAGE, messageMap } from 'src/common/messages';
-import { USER_MESSAGE } from '../message/user.message';
 
 @Injectable()
 export class VerifyEmailInterceptor implements NestInterceptor {
@@ -29,7 +28,6 @@ export class VerifyEmailInterceptor implements NestInterceptor {
 
       const token: string = request?.query?.token;
       const code: string = request?.query?.code;
-      const userId: string = request?.params?.id;
 
       if (!token) {
         throwApiErrorResponse({
@@ -47,16 +45,6 @@ export class VerifyEmailInterceptor implements NestInterceptor {
         payload,
         StrategyType.JWT,
       );
-
-      if (user.id !== userId) {
-        throwApiErrorResponse({
-          response: {
-            message: USER_MESSAGE.error.USER_INVALID_ID,
-            success: false,
-          },
-          status: HttpStatus.BAD_REQUEST,
-        });
-      }
 
       if (user?.code?.emailVerification !== code) {
         throwApiErrorResponse({
