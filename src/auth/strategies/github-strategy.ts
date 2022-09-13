@@ -6,17 +6,23 @@ import { OAUTH_PROVIDER } from '@prisma/client';
 import { Profile } from 'passport';
 import { throwApiErrorResponse } from 'src/common/functions';
 import { MESSAGE } from 'src/common/messages';
+import { ConfigService } from '@nestjs/config';
 
 interface GithubProfile extends Profile {
   emails: [{ value: string; verified?: boolean }];
 }
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
-  constructor(private readonly authService: AuthService) {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {
     super({
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: 'http://localhost:3000/v1/api/auth/github/redirect',
+      callbackURL: `${configService.get(
+        'API_URL',
+      )}/v1/api/auth/github/redirect`,
       scope: ['user:email'],
     });
   }

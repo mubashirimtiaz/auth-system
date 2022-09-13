@@ -11,12 +11,6 @@ export class PrismaService
   async onModuleInit() {
     await this.$connect();
     this.$use(async (params, next) => {
-      // if (['update'].includes(params.action) && params.args.data.updatedAt) {
-      //   const data = params.args.data;
-      //   data.updatedAt = new Date();
-      //   params.args.data = data;
-      // }
-
       if (
         ['create', 'update'].includes(params.action) &&
         params.model == 'User' &&
