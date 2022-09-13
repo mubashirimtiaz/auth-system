@@ -5,6 +5,7 @@ import { MESSAGE } from 'src/common/messages';
 import { USER_MESSAGE } from './message/user.message';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
+  addHrsAheadOfTime,
   ApiSuccessResponse,
   generateCode,
   throwApiErrorResponse,
@@ -95,14 +96,6 @@ export class UserService {
         where: { email },
       });
 
-      const { forgetPassword: forgetPasswordCode } =
-        await this.prismaService.code.update({
-          where: { userId: user.id },
-          data: {
-            forgetPassword: generateCode(),
-          },
-        });
-
       if (!user) {
         throwApiErrorResponse({
           response: {
@@ -112,6 +105,18 @@ export class UserService {
           status: HttpStatus.BAD_REQUEST,
         });
       }
+
+      const { forgetPassword: forgetPasswordCode } =
+        await this.prismaService.code.update({
+          where: { userId: user.id },
+          data: {
+            forgetPassword: {
+              value: generateCode(),
+              exp: addHrsAheadOfTime(1),
+            },
+          },
+        });
+
       const payload = {
         sub: user.id,
         email: user.email,
@@ -128,9 +133,11 @@ export class UserService {
         secret: process.env.JWT_FORGET_PASSWORD_SECRET + hash,
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
-      const url = `${this.configService.get('API_URL')}/v1/api/user/${
-        payload?.sub
-      }/forget-password?token=${token}`;
+      const url = `${this.configService.get(
+        'API_URL',
+      )}/v1/api/user/forget-password/reset?code=${
+        forgetPasswordCode?.value
+      }&token=${token}`;
       await this.sesService.sendMail(
         payload?.email,
         {
@@ -145,7 +152,7 @@ export class UserService {
           <a href=${url}>Change Password</a>
         </p>
         <p>CODE
-          <kbd>${forgetPasswordCode}</kbd>
+          <kbd>${forgetPasswordCode?.value}</kbd>
         </p>
 
         <p>If you did not request this email you can safely ignore it.</p>`,

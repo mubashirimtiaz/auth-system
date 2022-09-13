@@ -9,6 +9,7 @@ import { SignInDTO, SignUpDTO } from './dto/auth.dto';
 import { StrategyType } from './enum/auth.enum';
 import { AuthToken, UserValidationData } from './type/auth.type';
 import {
+  addHrsAheadOfTime,
   ApiSuccessResponse,
   generateCode,
   throwApiErrorResponse,
@@ -96,9 +97,11 @@ export class AuthService {
           secret: process.env.VERIFY_EMAIL_SECRET + user.email,
           expiresIn: process.env.VERIFY_EMAIL_EXPIRATION_TIME,
         });
-        const url = `${this.configService.get('API_URL')}/v1/api/user/${
-          user?.id
-        }/verify-email?token=${token}`;
+        const url = `${this.configService.get(
+          'API_URL',
+        )}/v1/api/user/verify?code=${
+          user?.code?.emailVerification?.value
+        }&token=${token}`;
         await this.sesService.sendMail(
           user?.email,
           { name: user?.name, url },
@@ -110,7 +113,7 @@ export class AuthService {
             <a href=${url}>Verify EMAIL</a>
           </p>
           <p>CODE:
-            <kbd>${user?.code?.emailVerification}</kbd>
+            <kbd>${user?.code?.emailVerification?.value}</kbd>
           </p>
           
           <p>If you did not request this email you can safely ignore it.</p>`,
@@ -159,24 +162,7 @@ export class AuthService {
     strategy: StrategyType,
   ): Promise<User> {
     try {
-      const user: User = await this.prismaService.user.findUnique({
-        where: { email: payload.email },
-        include: {
-          oAuthProviders: {
-            select: {
-              provider: true,
-            },
-          },
-          code: {
-            select: {
-              registration: true,
-              emailVerification: true,
-              refresh: true,
-              forgetPassword: true,
-            },
-          },
-        },
-      });
+      const user: User = await this.findUniqueUser({ email: payload.email });
 
       if (user && strategy === StrategyType.JWT) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -239,26 +225,7 @@ export class AuthService {
     verified,
   }: UserValidationData): Promise<User> {
     try {
-      const user: User = await this.prismaService.user.findUnique({
-        where: { email },
-        include: {
-          oAuthProviders: {
-            select: {
-              provider: true,
-              userId: true,
-            },
-          },
-          code: {
-            select: {
-              registration: true,
-              emailVerification: true,
-              refresh: true,
-              forgetPassword: true,
-            },
-          },
-        },
-      });
-
+      const user: User = await this.findUniqueUser({ email });
       if (user) {
         const providerExists = user.oAuthProviders.find(
           (elem) => elem.userId === user.id && elem.provider === providerName,
@@ -289,7 +256,10 @@ export class AuthService {
             },
             code: {
               update: {
-                registration: generateCode(),
+                registration: {
+                  value: generateCode(),
+                  exp: addHrsAheadOfTime(1),
+                },
               },
             },
           },
@@ -323,8 +293,18 @@ export class AuthService {
           code: {
             create: {
               ...(providerName === OAUTH_PROVIDER.EMAIL_PASSWORD
-                ? { emailVerification: generateCode() }
-                : { registration: generateCode() }),
+                ? {
+                    emailVerification: {
+                      value: generateCode(),
+                      exp: addHrsAheadOfTime(1),
+                    },
+                  }
+                : {
+                    registration: {
+                      value: generateCode(),
+                      exp: addHrsAheadOfTime(1),
+                    },
+                  }),
             },
           },
           oAuthProviders: {
@@ -355,6 +335,30 @@ export class AuthService {
     } catch (error) {
       throwApiErrorResponse(error);
     }
+  }
+
+  async findUniqueUser(query: {
+    [key: string]: string | number;
+  }): Promise<User> {
+    const user: User = await this.prismaService.user.findUnique({
+      where: query,
+      include: {
+        oAuthProviders: {
+          select: {
+            provider: true,
+          },
+        },
+        code: {
+          select: {
+            registration: true,
+            emailVerification: true,
+            refresh: true,
+            forgetPassword: true,
+          },
+        },
+      },
+    });
+    return user;
   }
 
   private getAccessToken(payload: Partial<JwtTOKEN>): string {

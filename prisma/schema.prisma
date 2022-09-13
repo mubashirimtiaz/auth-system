@@ -41,8 +41,13 @@ model Code {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
   userId            String  @unique
   user              User    @relation(fields: [userId], references: [id])
-  refresh           String?
-  emailVerification String?
-  registration      String?
-  forgetPassword    String?
+  refresh           Secret?
+  emailVerification Secret?
+  registration      Secret?
+  forgetPassword    Secret?
+}
+
+type Secret {
+  value String
+  exp   Int
 }
