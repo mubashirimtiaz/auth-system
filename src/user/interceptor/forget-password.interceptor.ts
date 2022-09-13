@@ -54,7 +54,7 @@ export class ForgetPasswordInterceptor implements NestInterceptor {
           process.env.FORGET_PASSWORD_SALT,
         );
 
-      if (user?.code?.forgetPassword !== code) {
+      if (user?.code?.forgetPassword?.value !== code) {
         throwApiErrorResponse({
           response: {
             message: MESSAGE.general.error.CODE_INVALID,

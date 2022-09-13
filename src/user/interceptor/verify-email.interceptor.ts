@@ -46,7 +46,7 @@ export class VerifyEmailInterceptor implements NestInterceptor {
         StrategyType.JWT,
       );
 
-      if (user?.code?.emailVerification !== code) {
+      if (user?.code?.emailVerification?.value !== code) {
         throwApiErrorResponse({
           response: {
             message: MESSAGE.general.error.CODE_INVALID,

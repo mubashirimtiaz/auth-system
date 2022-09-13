@@ -63,3 +63,9 @@ export const validationPipeException = (errors) => {
 export const generateCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
+
+export const addHrsAheadOfTime = (numOfHours: number): number => {
+  const dateCopy = new Date();
+  dateCopy.setTime(dateCopy.getTime() + numOfHours * 60 * 60 * 1000);
+  return dateCopy.getTime();
+};

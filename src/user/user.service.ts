@@ -5,6 +5,7 @@ import { MESSAGE } from 'src/common/messages';
 import { USER_MESSAGE } from './message/user.message';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
+  addHrsAheadOfTime,
   ApiSuccessResponse,
   generateCode,
   throwApiErrorResponse,
@@ -109,7 +110,10 @@ export class UserService {
         await this.prismaService.code.update({
           where: { userId: user.id },
           data: {
-            forgetPassword: generateCode(),
+            forgetPassword: {
+              value: generateCode(),
+              exp: addHrsAheadOfTime(1),
+            },
           },
         });
 
@@ -131,7 +135,9 @@ export class UserService {
       });
       const url = `${this.configService.get(
         'API_URL',
-      )}/v1/api/user/forget-password/reset?token=${token}`;
+      )}/v1/api/user/forget-password/reset?code=${
+        forgetPasswordCode?.value
+      }&token=${token}`;
       await this.sesService.sendMail(
         payload?.email,
         {
@@ -146,7 +152,7 @@ export class UserService {
           <a href=${url}>Change Password</a>
         </p>
         <p>CODE
-          <kbd>${forgetPasswordCode}</kbd>
+          <kbd>${forgetPasswordCode?.value}</kbd>
         </p>
 
         <p>If you did not request this email you can safely ignore it.</p>`,
