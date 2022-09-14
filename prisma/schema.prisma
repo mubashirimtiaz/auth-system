@@ -14,17 +14,24 @@ enum OAUTH_PROVIDER {
   EMAIL_PASSWORD
 }
 
+enum ORG_USER_ROLE {
+  ADMIN
+  MEMBER
+}
+
 model User {
-  id             String          @id @default(auto()) @map("_id") @db.ObjectId
-  email          String          @unique
-  emailVerified  Boolean         @default(false)
-  name           String
-  hash           String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @default(now())
-  oAuthProviders OAuthProvider[]
-  picture        String?
-  code           Code?
+  id                  String             @id @default(auto()) @map("_id") @db.ObjectId
+  email               String             @unique
+  emailVerified       Boolean            @default(false)
+  name                String
+  hash                String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @default(now())
+  oAuthProviders      OAuthProvider[]
+  picture             String?
+  code                Code?
+  organization        Organization?
+  partOfOrganizations OrganizationMate[]
 }
 
 model OAuthProvider {
@@ -50,4 +57,29 @@ model Code {
 type Secret {
   value String
   exp   Int
+}
+
+model Organization {
+  id           String             @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  website      String
+  teamSize     Int
+  industryType String
+  personaType  String
+  approachFrom String
+  isActive     Boolean            @default(true)
+  ownerId      String             @unique @db.ObjectId
+  owner        User               @relation(fields: [ownerId], references: [id])
+  members      OrganizationMate[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @default(now())
+}
+
+model OrganizationMate {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String        @db.ObjectId
+  user           User          @relation(fields: [userId], references: [id])
+  role           ORG_USER_ROLE
+  organizationId String        @db.ObjectId
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 }
