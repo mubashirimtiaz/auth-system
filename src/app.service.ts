@@ -5,7 +5,7 @@ import { MESSAGE } from './common/messages';
 
 @Injectable()
 export class AppService {
-  healthCheck(): ApiResponse<unknown> {
+  healthCheck(): ApiResponse<null> {
     return ApiSuccessResponse(true, MESSAGE.general.success.HEALTH_CHECK);
   }
 }
