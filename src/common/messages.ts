@@ -19,6 +19,7 @@ export const MESSAGE = {
       NO_DATA_FOUND: 'No data found',
       VALIDATION_FAILED: 'Validation failed',
       CODE_INVALID: 'Invalid code',
+      MISSING_CODE: 'Missing code',
     },
   },
   //SERVER

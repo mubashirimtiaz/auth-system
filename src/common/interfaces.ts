@@ -2,8 +2,12 @@ import { Request } from 'express';
 import { User } from 'src/user/interface/user.interface';
 
 //USER
-export { User } from 'src/user/interface/user.interface';
+export { JwtTOKEN } from 'src/auth/interface/auth.interface';
 //USER
+
+//AUTH
+export { User } from 'src/user/interface/user.interface';
+//AUTH
 
 //GENERAL
 export interface StrategyRequestHandler extends Request {
