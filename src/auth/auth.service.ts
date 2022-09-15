@@ -228,7 +228,7 @@ export class AuthService {
       const user: User = await this.findUniqueUser({ email });
       if (user) {
         const providerExists = user.oAuthProviders.find(
-          (elem) => elem.userId === user.id && elem.provider === providerName,
+          (elem) => elem.provider === providerName,
         );
 
         if (providerExists) {

@@ -91,6 +91,15 @@ export class UserService {
   async forgetPassword({
     email,
   }: ForgetPasswordDTO): Promise<ApiResponse<Token>> {
+    if (!email) {
+      throwApiErrorResponse({
+        response: {
+          message: USER_MESSAGE.error.USER_EMAIL_MISSING,
+          success: false,
+        },
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
     try {
       const user = await this.prismaService.user.findUnique({
         where: { email },

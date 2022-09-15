@@ -3,10 +3,14 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  HttpStatus,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { getRequiredProperties } from './functions';
+import { JwtTOKEN } from 'src/auth/interface/auth.interface';
+import { getRequiredProperties, throwApiErrorResponse } from './functions';
+import { MESSAGE } from './messages';
 
 @Injectable()
 export class TransformResInterceptor implements NestInterceptor {
@@ -20,5 +24,38 @@ export class TransformResInterceptor implements NestInterceptor {
         return res;
       }),
     );
+  }
+}
+
+@Injectable()
+export class DecodeJWTCodeInterceptor implements NestInterceptor {
+  constructor(private readonly jwtService: JwtService) {}
+  async intercept(
+    context: ExecutionContext,
+    next: CallHandler<any>,
+  ): Promise<Observable<any>> {
+    try {
+      const request = context.switchToHttp().getRequest();
+
+      const token: string = request?.query?.['token'];
+
+      if (!token) {
+        throwApiErrorResponse({
+          response: {
+            message: MESSAGE.general.error.MISSING_CODE,
+            success: false,
+          },
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      const payload = this.jwtService.decode(token) as JwtTOKEN;
+
+      request.meta = payload;
+
+      return next.handle();
+    } catch (error) {
+      throwApiErrorResponse(error);
+    }
   }
 }
