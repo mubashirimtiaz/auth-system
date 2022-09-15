@@ -18,7 +18,7 @@ export class OrganizationController {
   @ApiBearerAuth()
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getOrganization(@DECORATORS.user.params.Payload() user: User) {
+  async getOrganization(@DECORATORS.general.params.Payload('user') user: User) {
     return this.organizationService.getOrganization(user);
   }
 
@@ -26,7 +26,7 @@ export class OrganizationController {
   @Post('create')
   @UseGuards(JwtAuthGuard)
   async createOrganization(
-    @DECORATORS.user.params.Payload() user: User,
+    @DECORATORS.general.params.Payload('user') user: User,
     @Body() body: CreateOrganizationDTO,
   ) {
     return this.organizationService.createOrganization(user, body);
@@ -36,7 +36,7 @@ export class OrganizationController {
   @Post(':id/update')
   @UseGuards(JwtAuthGuard)
   async updateOrganization(
-    @DECORATORS.user.params.Payload() user: User,
+    @DECORATORS.general.params.Payload('user') user: User,
     @Body() body: UpdateOrganizationDTO,
     @Param() param: MongoIdDTO,
   ) {

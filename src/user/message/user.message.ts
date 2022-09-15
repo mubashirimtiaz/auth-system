@@ -25,5 +25,6 @@ export const USER_MESSAGE = {
       `This account can only be logged into with ${params}. Or by resetting the password with "Forgot Password".`,
     USER_EMAIL_ALREADY_VERIFIED: 'Email is already verified',
     USER_SAME_PASSWORD: 'New password is same as old password',
+    USER_EMAIL_MISSING: 'Email is missing',
   },
 };
