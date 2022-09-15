@@ -74,6 +74,7 @@ export class AuthService {
       {
         accessToken,
         refreshToken,
+        user: payload,
       },
     );
   }
@@ -93,36 +94,7 @@ export class AuthService {
 
       const payload = { email: user.email, sub: user.id, name: user.name };
       if (!user?.emailVerified) {
-        const token = this.jwtService.sign(payload, {
-          secret: process.env.VERIFY_EMAIL_SECRET + user.email,
-          expiresIn: process.env.VERIFY_EMAIL_EXPIRATION_TIME,
-        });
-        const url = `${this.configService.get(
-          'API_URL',
-        )}/v1/api/user/verify?code=${
-          user?.code?.emailVerification?.value
-        }&token=${token}`;
-        await this.sesService.sendMail(
-          user?.email,
-          { name: user?.name, url },
-          'FUMA! Verify Email',
-          `<p>Hey ${user?.name},</p>
-          <h2>Verify your email</h2>
-          <p>Please click below to verify your email</p>
-          <p>
-            <a href=${url}>Verify EMAIL</a>
-          </p>
-          <p>CODE:
-            <kbd>${user?.code?.emailVerification?.value}</kbd>
-          </p>
-          
-          <p>If you did not request this email you can safely ignore it.</p>`,
-        );
-        return ApiSuccessResponse<Token>(
-          true,
-          MESSAGE.mail.success.VERIFY_EMAIL_MAIL_SENT,
-          { token },
-        );
+        return this.sendVerifyEmail(user, payload);
       }
 
       const accessToken = await this.getAccessToken(payload);
@@ -135,6 +107,7 @@ export class AuthService {
         {
           accessToken,
           refreshToken,
+          user,
         },
       );
     } catch (error) {
@@ -337,6 +310,39 @@ export class AuthService {
     }
   }
 
+  async sendVerifyEmail(
+    user: User,
+    payload: Partial<JwtTOKEN>,
+  ): Promise<ApiResponse<Token>> {
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.VERIFY_EMAIL_SECRET + user.email,
+      expiresIn: process.env.VERIFY_EMAIL_EXPIRATION_TIME,
+    });
+    const url = `${this.configService.get('API_URL')}/v1/api/user/verify?code=${
+      user?.code?.emailVerification?.value
+    }&token=${token}`;
+    await this.sesService.sendMail(
+      user?.email,
+      { name: user?.name, url },
+      'FUMA! Verify Email',
+      `<p>Hey ${user?.name},</p>
+      <h2>Verify your email</h2>
+      <p>Please click below to verify your email</p>
+      <p>
+        <a href=${url}>Verify EMAIL</a>
+      </p>
+      <p>CODE:
+        <kbd>${user?.code?.emailVerification?.value}</kbd>
+      </p>
+      
+      <p>If you did not request this email you can safely ignore it.</p>`,
+    );
+    return ApiSuccessResponse<Token>(
+      true,
+      MESSAGE.mail.success.VERIFY_EMAIL_SENT,
+      { token },
+    );
+  }
   async findUniqueUser(query: {
     [key: string]: string | number;
   }): Promise<User> {

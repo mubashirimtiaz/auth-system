@@ -19,7 +19,6 @@ import { UserService } from './user.service';
 import { MESSAGE } from 'src/common/messages';
 import { User } from './interface/user.interface';
 import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
-import DECORATOR from './decorator/user.decorator';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { DecodeJWTCodeInterceptor } from 'src/common/interceptors';
 import DECORATORS from 'src/common/decorators';
@@ -33,7 +32,7 @@ export class UserController {
   @ApiBearerAuth()
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  getProfile(@DECORATOR.params.Payload('user') user: User) {
+  getProfile(@DECORATORS.general.params.Payload('user') user: User) {
     return ApiSuccessResponse<Partial<User>>(
       true,
       MESSAGE.user.success.USER_FOUND,
@@ -45,7 +44,7 @@ export class UserController {
   @Post('update-profile')
   @UseGuards(JwtAuthGuard)
   updateProfile(
-    @DECORATOR.params.Payload('user') user: User,
+    @DECORATORS.general.params.Payload('user') user: User,
     @Body() body: UpdateProfileDTO,
   ) {
     return this.userService.updateProfile(body, user);
@@ -55,7 +54,7 @@ export class UserController {
   @Post('update-password')
   @UseGuards(JwtAuthGuard)
   updatePassword(
-    @DECORATOR.params.Payload('user') user: User,
+    @DECORATORS.general.params.Payload('user') user: User,
     @Body() body: UpdatePasswordDTO,
   ) {
     return this.userService.updatePassword(body, user);
@@ -80,7 +79,7 @@ export class UserController {
   @Post('forget-password/reset')
   @UseInterceptors(ForgetPasswordInterceptor)
   updateForgetPassword(
-    @DECORATOR.params.Payload('user') user: User,
+    @DECORATORS.general.params.Payload('user') user: User,
     @Body() { newPassword }: UpdateForgetPasswordDTO,
   ) {
     return this.userService.updateForgetPassword({ newPassword }, user);
@@ -90,7 +89,16 @@ export class UserController {
   @ApiQuery({ name: 'code', required: true })
   @Get('verify')
   @UseInterceptors(VerifyEmailInterceptor)
-  verifyEmail(@DECORATOR.params.Payload('user') user: User) {
+  verifyEmail(@DECORATORS.general.params.Payload('user') user: User) {
     return this.userService.verifyEmail(user);
+  }
+
+  @ApiQuery({ name: 'token', required: true })
+  @Get('verify/resend-email')
+  @UseInterceptors(DecodeJWTCodeInterceptor)
+  verifyEmailResend(
+    @DECORATORS.general.params.Payload('meta') payload: JwtTOKEN,
+  ) {
+    return this.userService.verifyEmailResend(payload);
   }
 }

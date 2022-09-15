@@ -29,7 +29,7 @@ export class AuthController {
   @Post('signin')
   @UseGuards(LocalAuthGuard)
   async login(
-    @DECORATORS.user.params.Payload('user') user: User,
+    @DECORATORS.general.params.Payload('user') user: User,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Body() _: SignInDTO,
   ) {
@@ -44,7 +44,7 @@ export class AuthController {
   @Post('refresh')
   @UseGuards(JwtRefreshAuthGuard)
   refreshAccessToken(
-    @DECORATORS.user.params.Payload('user') user: User,
+    @DECORATORS.general.params.Payload('user') user: User,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Body() _: RefreshTokenDTO,
   ) {
@@ -54,12 +54,12 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get('google')
   // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-  async googleAuth(@DECORATORS.user.params.Payload('user') user: User) {}
+  async googleAuth(@DECORATORS.general.params.Payload('user') user: User) {}
 
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
   async googleAuthRedirect(
-    @DECORATORS.user.params.Payload('user') user: User,
+    @DECORATORS.general.params.Payload('user') user: User,
     @Res() res: Response,
   ) {
     const link = this.authService.oauthRedirect(user);
@@ -69,12 +69,12 @@ export class AuthController {
   @Get('github')
   @UseGuards(GithubAuthGuard)
   // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-  async githubAuth(@DECORATORS.user.params.Payload('user') user: User) {}
+  async githubAuth(@DECORATORS.general.params.Payload('user') user: User) {}
 
   @Get('github/redirect')
   @UseGuards(GithubAuthGuard)
   githubAuthRedirect(
-    @DECORATORS.user.params.Payload('user') user: User,
+    @DECORATORS.general.params.Payload('user') user: User,
     @Res() res: Response,
   ) {
     const link = this.authService.oauthRedirect(user);
@@ -84,12 +84,12 @@ export class AuthController {
   @Get('microsoft')
   @UseGuards(MicrosoftAuthGuard)
   // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-  async microsoftAuth(@DECORATORS.user.params.Payload('user') user: User) {}
+  async microsoftAuth(@DECORATORS.general.params.Payload('user') user: User) {}
 
   @Get('microsoft/redirect')
   @UseGuards(MicrosoftAuthGuard)
   microsoftAuthRedirect(
-    @DECORATORS.user.params.Payload('user') user: User,
+    @DECORATORS.general.params.Payload('user') user: User,
     @Res() res: Response,
   ) {
     const link = this.authService.oauthRedirect(user);
@@ -98,7 +98,7 @@ export class AuthController {
   @ApiQuery({ name: 'code', required: true })
   @Get('verify-oauth-code')
   @UseInterceptors(VerifyOauthTokenInterceptor)
-  async verifyOauthCode(@DECORATORS.user.params.Payload('user') user: User) {
+  async verifyOauthCode(@DECORATORS.general.params.Payload('user') user: User) {
     return this.authService.login(user);
   }
 }

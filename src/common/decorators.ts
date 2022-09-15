@@ -1,4 +1,3 @@
-import User from 'src/user/decorator/user.decorator';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 const Payload = createParamDecorator(
@@ -9,8 +8,7 @@ const Payload = createParamDecorator(
 );
 
 const DECORATORS = {
-  //USER
-  user: User,
+  //User
 
   //general
   general: {

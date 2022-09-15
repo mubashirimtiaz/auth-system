@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { User } from './interface/user.interface';
-import { ApiResponse } from 'src/common/interfaces';
+import { ApiResponse, JwtTOKEN } from 'src/common/interfaces';
 import { MESSAGE } from 'src/common/messages';
 import { USER_MESSAGE } from './message/user.message';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -22,11 +22,13 @@ import { Token } from 'src/common/types';
 import { SesService } from 'src/aws/ses/ses.service';
 import { PASSWORD_CHANGE_TYPE } from './type/user.type';
 import { ConfigService } from '@nestjs/config';
+import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly authService: AuthService,
     private readonly jwtService: JwtService,
     private readonly sesService: SesService,
     private readonly configService: ConfigService,
@@ -222,6 +224,56 @@ export class UserService {
     } catch (error) {
       throwApiErrorResponse(error);
     }
+  }
+
+  async verifyEmailResend(param: JwtTOKEN) {
+    const user = await this.prismaService.user.findUnique({
+      where: { email: param.email },
+    });
+
+    if (!user) {
+      throwApiErrorResponse({
+        response: {
+          message: USER_MESSAGE.error.USER_NOT_FOUND,
+          success: false,
+        },
+        status: HttpStatus.UNAUTHORIZED,
+      });
+    }
+
+    if (user.emailVerified) {
+      throwApiErrorResponse({
+        response: {
+          message: USER_MESSAGE.error.USER_EMAIL_ALREADY_VERIFIED,
+          success: false,
+        },
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const updatedCode = await this.prismaService.code.update({
+      where: { userId: user.id },
+      data: {
+        emailVerification: {
+          value: generateCode(),
+          exp: addHrsAheadOfTime(1),
+        },
+      },
+      include: {
+        user: true,
+      },
+    });
+    const { user: _user, ...code } = updatedCode;
+
+    const userData = { ..._user, code: { ...code } };
+
+    const payload = {
+      sub: user?.id,
+      email: user?.email,
+      name: user?.name,
+    };
+
+    return this.authService.sendVerifyEmail(userData, payload);
   }
 
   private async passwordLookup(
