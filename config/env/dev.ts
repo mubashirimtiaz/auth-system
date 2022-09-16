@@ -1,5 +1,6 @@
 export const vars = {
   API_URL: 'http://localhost:3000',
+  WEB_URL: 'https://d37f1pgihrw3s3.cloudfront.net',
   VERSION: 'v1',
   STAGE: 'dev',
   DATABASE_URL: process.env.DATABASE_URL,
