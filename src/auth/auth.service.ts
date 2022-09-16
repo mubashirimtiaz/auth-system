@@ -41,9 +41,7 @@ export class AuthService {
       secret: process.env.VERIFY_OAUTH_SECRET + user.code.registration,
       expiresIn: process.env.VERIFY_OAUTH_EXPIRATION_TIME,
     });
-    const url = `${this.configService.get(
-      'API_URL',
-    )}/v1/api/auth/verify-oauth-code?code=${code}`;
+    const url = `${this.configService.get('WEB_URL')}/verify/code?code=${code}`;
     return url;
   }
 
@@ -318,7 +316,7 @@ export class AuthService {
       secret: process.env.VERIFY_EMAIL_SECRET + user.email,
       expiresIn: process.env.VERIFY_EMAIL_EXPIRATION_TIME,
     });
-    const url = `${this.configService.get('API_URL')}/v1/api/user/verify?code=${
+    const url = `${this.configService.get('WEB_URL')}/verify/email?code=${
       user?.code?.emailVerification?.value
     }&token=${token}`;
     await this.sesService.sendMail(

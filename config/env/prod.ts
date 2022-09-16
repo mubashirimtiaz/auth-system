@@ -1,5 +1,6 @@
 export const vars = {
   API_URL: 'http://fuma-core-api.us-east-1.elasticbeanstalk.com',
+  WEB_URL: 'https://d37f1pgihrw3s3.cloudfront.net',
   VERSION: 'v1',
   STAGE: 'prod',
   DATABASE_URL: process.env.DATABASE_URL,
