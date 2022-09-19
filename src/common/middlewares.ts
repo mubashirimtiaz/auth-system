@@ -21,17 +21,16 @@ export class VerifySignatureMiddleware implements NestMiddleware {
 
     const signature = req.headers['x-signature-token'];
     const hashCode = md5(JSON.stringify({ userAgent, country }));
-    if (signature === 'bypass') {
+    if (signature === 'bypass' || signature === hashCode) {
       next();
-    } else if (signature === hashCode) {
-      next();
+    } else {
+      throwApiErrorResponse({
+        response: {
+          message: MESSAGE.general.error.INVALID_AWS_MQTT_IOT_SIGNATURE_TOKEN,
+          success: false,
+        },
+        status: HttpStatus.BAD_REQUEST,
+      });
     }
-    throwApiErrorResponse({
-      response: {
-        message: MESSAGE.general.error.INVALID_AWS_MQTT_IOT_SIGNATURE_TOKEN,
-        success: false,
-      },
-      status: HttpStatus.BAD_REQUEST,
-    });
   }
 }
