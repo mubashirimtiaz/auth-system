@@ -19,12 +19,15 @@ import { UserService } from './user.service';
 import { MESSAGE } from 'src/common/messages';
 import { User } from './interface/user.interface';
 import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { DecodeJWTCodeInterceptor } from 'src/common/interceptors';
 import DECORATORS from 'src/common/decorators';
 import { JwtTOKEN } from 'src/common/interfaces';
 
 @ApiTags('User')
+@ApiHeader({
+  name: 'x-signature-token',
+})
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

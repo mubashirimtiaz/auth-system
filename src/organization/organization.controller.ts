@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import DECORATORS from 'src/common/decorators';
 import { MongoIdDTO } from 'src/common/dtos';
@@ -11,6 +11,9 @@ import {
 import { OrganizationService } from './organization.service';
 
 @ApiTags('Organization')
+@ApiHeader({
+  name: 'x-signature-token',
+})
 @Controller('organization')
 export class OrganizationController {
   constructor(private readonly organizationService: OrganizationService) {}
