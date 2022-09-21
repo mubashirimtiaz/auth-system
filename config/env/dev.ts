@@ -1,6 +1,6 @@
 export const vars = {
   API_URL: 'http://localhost:3000',
-  WEB_URL: 'https://d37f1pgihrw3s3.cloudfront.net',
+  WEB_URL: 'http://localhost:4000',
   VERSION: 'v1',
   STAGE: 'dev',
   DATABASE_URL: process.env.DATABASE_URL,
@@ -27,6 +27,6 @@ export const vars = {
   AWS_REGION: process.env.AWS_REGION,
   MQTT_IOT_ACCESS_KEY: process.env.MQTT_IOT_ACCESS_KEY,
   MQTT_IOT_SECRET_ACCESS_KEY: process.env.MQTT_IOT_SECRET_ACCESS_KEY,
-  MQTT_PUBLISH_IOT_URL: 'a1g6jmt601zqrx-ats.iot.us-east-1.amazonaws.com',
+  MQTT_PUBLISH_IOT_URL: 'a6fcjbgcxgqtm-ats.iot.us-east-1.amazonaws.com',
   AWS_MQTT_IOT_VERIFICATION_TOKEN: process.env.AWS_VERIFICATION_TOKEN,
 };

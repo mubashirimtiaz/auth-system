@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { JwtTOKEN } from 'src/auth/interface/auth.interface';
-import { getRequiredProperties, throwApiErrorResponse } from './functions';
+import { removeExtraProperties, throwApiErrorResponse } from './functions';
 import { MESSAGE } from './messages';
 
 @Injectable()
@@ -18,11 +18,11 @@ export class TransformResInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((res) => {
         if (res?.data?.user) {
-          getRequiredProperties(res.data?.user, ['hash', 'code']);
+          removeExtraProperties(res.data?.user, ['hash', 'code']);
           return res;
         }
         if (res?.data) {
-          getRequiredProperties(res.data, ['hash', 'code']);
+          removeExtraProperties(res.data, ['hash', 'code']);
           return res;
         }
         return res;

@@ -13,6 +13,8 @@ import { VerifySignatureMiddleware } from './common/middlewares';
 import { AuthController } from './auth/auth.controller';
 import { UserController } from './user/user.controller';
 import { OrganizationController } from './organization/organization.controller';
+import { ServiceModule } from './service/service.module';
+import { ServiceController } from './service/service.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,6 +28,7 @@ import { OrganizationController } from './organization/organization.controller';
     AwsModule,
     OrganizationModule,
     MqttModule,
+    ServiceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -35,6 +38,11 @@ export class AppModule implements NestModule {
     consumer
       .apply(VerifySignatureMiddleware)
       .exclude('(.*)/auth/(.*)/redirect')
-      .forRoutes(AuthController, UserController, OrganizationController);
+      .forRoutes(
+        AuthController,
+        UserController,
+        OrganizationController,
+        ServiceController,
+      );
   }
 }

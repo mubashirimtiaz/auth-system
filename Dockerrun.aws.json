@@ -1,7 +1,7 @@
 {
   "AWSEBDockerrunVersion": "1",
   "Authentication": {
-    "bucket": "fuma-docker-login-bucket",
+    "bucket": "fuma-docker-login-test",
     "key": "dockercfg"
   },
   "Image": {

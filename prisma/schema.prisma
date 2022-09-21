@@ -32,11 +32,12 @@ model User {
   code                Code?
   organization        Organization?
   partOfOrganizations OrganizationMate[]
+  Service             Service[]
 }
 
 model OAuthProvider {
   id         String         @id @default(auto()) @map("_id") @db.ObjectId
-  userId     String
+  userId     String         @db.ObjectId
   user       User           @relation(fields: [userId], references: [id])
   provider   OAUTH_PROVIDER
   providerId String?
@@ -46,7 +47,7 @@ model OAuthProvider {
 
 model Code {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String  @unique
+  userId            String  @unique @db.ObjectId
   user              User    @relation(fields: [userId], references: [id])
   refresh           Secret?
   emailVerification Secret?
@@ -67,12 +68,14 @@ model Organization {
   industryType String
   personaType  String
   approachFrom String
-  isActive     Boolean            @default(true)
+  isActivated  Boolean            @default(true)
+  isDeleted    Boolean            @default(false)
   ownerId      String             @unique @db.ObjectId
   owner        User               @relation(fields: [ownerId], references: [id])
   members      OrganizationMate[]
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @default(now())
+  Service      Service[]
 }
 
 model OrganizationMate {
@@ -82,4 +85,20 @@ model OrganizationMate {
   role           ORG_USER_ROLE
   organizationId String        @db.ObjectId
   organization   Organization? @relation(fields: [organizationId], references: [id])
+}
+
+model Service {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  proxyPath      String
+  proxyServerUrl String
+  organizationId String        @db.ObjectId
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  userId         String        @db.ObjectId
+  user           User          @relation(fields: [userId], references: [id])
+  isActivated    Boolean       @default(true)
+  isDeleted      Boolean       @default(false)
+  clientId       String        @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @default(now())
 }
