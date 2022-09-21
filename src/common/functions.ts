@@ -18,12 +18,23 @@ export const ApiSuccessResponse = <T>(
   };
 };
 
-export const getRequiredProperties = (
+export const removeExtraProperties = (
   payload: { [key: string]: any },
   excludedProp: string[],
 ) => {
   excludedProp.forEach((prop) => delete payload[prop]);
   return payload;
+};
+
+export const getRequiredProperties = (
+  payload: { [key: string]: any },
+  includeProp: string[],
+) => {
+  const obj = {};
+  includeProp.forEach((prop) => {
+    obj[prop] = payload[prop];
+  });
+  return obj;
 };
 
 export const throwApiErrorResponse = <T>(error: {
