@@ -19,7 +19,9 @@ export class VerifySignatureMiddleware implements NestMiddleware {
         ? 'LOCAL'
         : geoip.lookup(ip)?.country;
 
-    const signature = req.headers['x-signature-token'];
+    const signature =
+      req.headers['x-signature-token'] || req.query['x-signature-token'];
+
     const hashCode = md5(JSON.stringify({ userAgent, country }));
     if (signature === 'bypass' || signature === hashCode) {
       next();
