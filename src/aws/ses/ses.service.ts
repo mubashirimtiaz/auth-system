@@ -29,6 +29,7 @@ export class SesService {
       Destination: {
         ToAddresses: [email],
       },
+      // FromEmailAddress: 'no-reply@fuma.ai',
       FromEmailAddress: 'mubashir@sudofy.com',
     };
     try {
