@@ -1,6 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaClient, Service } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { S3Service } from 'src/aws/s3/s3.service';
 import {
   getRequiredProperties,
   throwApiErrorResponse,
@@ -12,6 +13,9 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  constructor(private readonly s3Service: S3Service) {
+    super();
+  }
   async onModuleInit() {
     await this.$connect();
     this.$use(async (params, next) => {
@@ -31,6 +35,7 @@ export class PrismaService
         params.model == 'Service'
       ) {
         try {
+          const result = await next(params);
           const services: Service[] = await this.service.findMany();
           const service = {};
           services.forEach((svc) => {
@@ -42,6 +47,12 @@ export class PrismaService
             ]);
             service[svc.clientId] = data;
           });
+          await this.s3Service.uploadFile(
+            'fuma-services-test',
+            'services.json',
+            Buffer.from(JSON.stringify(service)),
+          );
+          return result;
         } catch (error) {
           throwApiErrorResponse(error);
         }
