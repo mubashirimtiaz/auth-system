@@ -79,6 +79,17 @@ export class UserController {
 
   @ApiQuery({ name: 'token', required: true })
   @ApiQuery({ name: 'code', required: true })
+  @Get('forget-password/verify')
+  @UseInterceptors(ForgetPasswordInterceptor)
+  verifyForgetPassword() {
+    return ApiSuccessResponse(
+      true,
+      MESSAGE.user.success.FORGET_PASSWORD_TOKEN_VERIFIED,
+    );
+  }
+
+  @ApiQuery({ name: 'token', required: true })
+  @ApiQuery({ name: 'code', required: true })
   @Post('forget-password/reset')
   @UseInterceptors(ForgetPasswordInterceptor)
   updateForgetPassword(
