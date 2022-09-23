@@ -213,7 +213,7 @@ export class AuthService {
               status: HttpStatus.CONFLICT,
             });
           } else {
-            await this.prismaService.code.update({
+            const updatedCode = await this.prismaService.code.update({
               where: {
                 userId: user.id,
               },
@@ -224,7 +224,9 @@ export class AuthService {
                 },
               },
             });
+            user.code = updatedCode;
           }
+
           return user;
         }
         const updatedUser = await this.prismaService.user.update({
