@@ -197,23 +197,6 @@ export class AuthService {
     verified,
   }: UserValidationData): Promise<User> {
     try {
-      if (providerName !== 'EMAIL_PASSWORD') {
-        await this.prismaService.user.update({
-          where: {
-            email,
-          },
-          data: {
-            code: {
-              update: {
-                registration: {
-                  value: generateCode(),
-                  exp: addHrsAheadOfTime(1),
-                },
-              },
-            },
-          },
-        });
-      }
       const user: User = await this.findUniqueUser({ email });
       if (user) {
         const providerExists = user.oAuthProviders.find(
@@ -228,6 +211,18 @@ export class AuthService {
                 success: false,
               },
               status: HttpStatus.CONFLICT,
+            });
+          } else {
+            await this.prismaService.code.update({
+              where: {
+                userId: user.id,
+              },
+              data: {
+                registration: {
+                  value: generateCode(),
+                  exp: addHrsAheadOfTime(1),
+                },
+              },
             });
           }
           return user;
