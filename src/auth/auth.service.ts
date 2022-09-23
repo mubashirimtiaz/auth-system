@@ -38,7 +38,8 @@ export class AuthService {
     };
 
     const code = this.jwtService.sign(payload, {
-      secret: process.env.VERIFY_OAUTH_SECRET + user.code.registration,
+      secret:
+        process.env.VERIFY_OAUTH_SECRET + user.code.registration?.value || '',
       expiresIn: process.env.VERIFY_OAUTH_EXPIRATION_TIME,
     });
     const url = `${this.configService.get('WEB_URL')}/verify/code?code=${code}`;
@@ -196,6 +197,23 @@ export class AuthService {
     verified,
   }: UserValidationData): Promise<User> {
     try {
+      if (providerName !== 'EMAIL_PASSWORD') {
+        await this.prismaService.user.update({
+          where: {
+            email,
+          },
+          data: {
+            code: {
+              update: {
+                registration: {
+                  value: generateCode(),
+                  exp: addHrsAheadOfTime(1),
+                },
+              },
+            },
+          },
+        });
+      }
       const user: User = await this.findUniqueUser({ email });
       if (user) {
         const providerExists = user.oAuthProviders.find(
