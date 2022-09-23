@@ -50,7 +50,8 @@ export class VerifyOauthTokenInterceptor implements NestInterceptor {
       await this.jwtService.verify(code, {
         ignoreExpiration: false,
         secret:
-          process.env.VERIFY_OAUTH_SECRET + user?.code?.registration || '',
+          process.env.VERIFY_OAUTH_SECRET + user?.code?.registration?.value ||
+          '',
       });
 
       await this.prismaService.code.update({

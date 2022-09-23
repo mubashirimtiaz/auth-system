@@ -7,11 +7,14 @@ export const USER_MESSAGE = {
     USER_PASSWORD_UPDATED: 'User password updated successfully',
     USER_FOUND: 'User found successfully',
     USER_EMAIL_VERIFIED: 'User email verified successfully',
+    FORGET_PASSWORD_TOKEN_VERIFIED:
+      'Forget password token verified successfully',
   },
   //ERROR
   error: {
     USER_ALREADY_EXISTS: 'User already exists',
-    USER_NOT_FOUND: 'User not found',
+    USER_NOT_FOUND: 'User does not exist',
+    EMAIL_NOT_FOUND: 'Email does not exist',
     USER_MISSING_CREDENTIALS: 'Missing credentials',
     USER_ID_MISSING: 'Missing user id',
     USER_INVALID_ID: 'Invalid user id',

@@ -110,7 +110,7 @@ export class UserService {
       if (!user) {
         throwApiErrorResponse({
           response: {
-            message: USER_MESSAGE.error.USER_INVALID_EMAIL,
+            message: USER_MESSAGE.error.EMAIL_NOT_FOUND,
             success: false,
           },
           status: HttpStatus.BAD_REQUEST,
@@ -144,7 +144,9 @@ export class UserService {
         secret: process.env.JWT_FORGET_PASSWORD_SECRET + hash,
         expiresIn: process.env.JWT_FORGET_PASSWORD_EXPIRATION_TIME,
       });
-      const url = `${this.configService.get('WEB_URL')}/forget-password?code=${
+      const url = `${this.configService.get(
+        'WEB_URL',
+      )}/verify/forget-password?code=${
         forgetPasswordCode?.value
       }&token=${token}`;
       await this.sesService.sendMail(
