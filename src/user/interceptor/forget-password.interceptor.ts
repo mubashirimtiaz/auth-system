@@ -49,10 +49,7 @@ export class ForgetPasswordInterceptor implements NestInterceptor {
 
       const hash =
         user.hash ??
-        bcrypt.hashSync(
-          user.email + user.hash,
-          process.env.FORGET_PASSWORD_SALT,
-        );
+        bcrypt.hashSync(user.email, process.env.FORGET_PASSWORD_SALT);
 
       if (user?.code?.forgetPassword?.value !== code) {
         throwApiErrorResponse({

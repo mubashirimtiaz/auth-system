@@ -147,22 +147,24 @@ export class AuthService {
             response: {
               message: MESSAGE.user.error.USER_INVALID_EMAIL,
               success: false,
+              data: {
+                fields: ['email'],
+              },
             },
-            status: HttpStatus.UNAUTHORIZED,
+            status: HttpStatus.BAD_REQUEST,
           });
         }
 
         if (!user?.hash) {
-          const providers = user?.oAuthProviders?.map(
-            (elem) => elem.provider,
-          ) as string[];
-
           throwApiErrorResponse({
             response: {
-              message: MESSAGE.user.error.USER_MISSING_PASSWORD(providers),
+              message: MESSAGE.user.error.USER_INVALID_PASSWORD,
               success: false,
+              data: {
+                fields: ['password'],
+              },
             },
-            status: HttpStatus.UNAUTHORIZED,
+            status: HttpStatus.BAD_REQUEST,
           });
         }
         const isValidPassword = await bcrypt.compare(
@@ -174,8 +176,11 @@ export class AuthService {
             response: {
               message: MESSAGE.user.error.USER_INVALID_PASSWORD,
               success: false,
+              data: {
+                fields: ['password'],
+              },
             },
-            status: HttpStatus.UNAUTHORIZED,
+            status: HttpStatus.BAD_REQUEST,
           });
         }
 
@@ -380,7 +385,7 @@ export class AuthService {
     return user;
   }
 
-  private getAccessToken(payload: Partial<JwtTOKEN>): string {
+  getAccessToken(payload: Partial<JwtTOKEN>): string {
     const accessToken: string = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_TOKEN_SECRET,
       expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
@@ -388,7 +393,7 @@ export class AuthService {
     return accessToken;
   }
 
-  private getRefreshToken(payload: Partial<JwtTOKEN>): string {
+  getRefreshToken(payload: Partial<JwtTOKEN>): string {
     const refreshToken: string = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_TOKEN_SECRET,
       expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME,
