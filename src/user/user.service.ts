@@ -20,7 +20,7 @@ import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from 'src/common/types';
 import { SesService } from 'src/aws/ses/ses.service';
-import { PASSWORD_CHANGE_TYPE } from './type/user.type';
+import { AuthToken, PASSWORD_CHANGE_TYPE } from './type/user.type';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from 'src/auth/auth.service';
 
@@ -78,7 +78,7 @@ export class UserService {
   async updatePassword(
     credential: UpdatePasswordDTO,
     user: User,
-  ): Promise<ApiResponse<null>> {
+  ): Promise<ApiResponse<null | AuthToken>> {
     try {
       return await this.passwordLookup(
         credential,
@@ -135,10 +135,7 @@ export class UserService {
       };
       const hash =
         user.hash ??
-        bcrypt.hashSync(
-          user.email + user.hash,
-          process.env.FORGET_PASSWORD_SALT,
-        );
+        bcrypt.hashSync(user.email, process.env.FORGET_PASSWORD_SALT);
 
       const token = this.jwtService.sign(payload, {
         secret: process.env.JWT_FORGET_PASSWORD_SECRET + hash,
@@ -190,7 +187,7 @@ export class UserService {
     }
   }
 
-  async verifyEmail(user: User): Promise<ApiResponse<null>> {
+  async verifyEmail(user: User): Promise<ApiResponse<AuthToken>> {
     try {
       if (user?.emailVerified) {
         throwApiErrorResponse({
@@ -216,10 +213,24 @@ export class UserService {
         },
       });
 
-      return ApiSuccessResponse<null>(
+      const payload = {
+        sub: user.id,
+        email: user.email,
+        name: user.name,
+      };
+
+      const accessToken = this.authService.getAccessToken(payload);
+
+      const refreshToken = this.authService.getRefreshToken(payload);
+
+      return ApiSuccessResponse<AuthToken>(
         true,
         USER_MESSAGE.success.USER_EMAIL_VERIFIED,
-        null,
+        {
+          accessToken,
+          refreshToken,
+          user,
+        },
       );
     } catch (error) {
       throwApiErrorResponse(error);
@@ -283,7 +294,7 @@ export class UserService {
     },
     user: User,
     type: PASSWORD_CHANGE_TYPE,
-  ): Promise<ApiResponse<null>> {
+  ): Promise<ApiResponse<null | AuthToken>> {
     try {
       if (type === PASSWORD_CHANGE_TYPE.UPDATE) {
         if (!(await bcrypt.compare(credential.oldPassword, user.hash))) {
@@ -320,6 +331,22 @@ export class UserService {
           },
         },
       });
+
+      if (type === PASSWORD_CHANGE_TYPE.FORGET) {
+        const payload = {
+          sub: user?.id,
+          email: user?.email,
+          name: user?.name,
+        };
+        const accessToken = await this.authService.getAccessToken(payload);
+
+        const refreshToken = await this.authService.getRefreshToken(payload);
+        return ApiSuccessResponse(
+          true,
+          USER_MESSAGE.success.USER_PASSWORD_UPDATED,
+          { accessToken, refreshToken, user },
+        );
+      }
 
       return ApiSuccessResponse(
         true,
