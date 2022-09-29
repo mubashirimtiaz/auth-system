@@ -159,9 +159,6 @@ export class UserService {
         <p>
           <a href=${url}>Change Password</a>
         </p>
-        <p>CODE
-          <kbd>${forgetPasswordCode?.value}</kbd>
-        </p>
 
         <p>If you did not request this email you can safely ignore it.</p>`,
       );

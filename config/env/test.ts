@@ -1,6 +1,6 @@
 export const vars = {
   API_URL: 'https://api-test.fuma.ai',
-  WEB_URL: 'https://d37f1pgihrw3s3.cloudfront.net',
+  WEB_URL: 'https://app-test.fuma.ai',
   VERSION: 'v1',
   STAGE: 'test',
   DATABASE_URL: process.env.DATABASE_URL,
