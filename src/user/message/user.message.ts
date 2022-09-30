@@ -29,6 +29,5 @@ export const USER_MESSAGE = {
     USER_EMAIL_ALREADY_VERIFIED: 'Email is already verified',
     USER_SAME_PASSWORD: 'New password is same as old password',
     USER_EMAIL_MISSING: 'Email is missing',
-    USER_DENIED_ACCESS: 'The User has denied your application access.',
   },
 };
