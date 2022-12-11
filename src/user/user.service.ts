@@ -154,7 +154,7 @@ export class UserService {
           url,
           name: payload?.name,
         },
-        'FUMA! Forget your password?',
+        'MY APP! Forget your password?',
         './forget-password',
       );
       return ApiSuccessResponse<Token>(
