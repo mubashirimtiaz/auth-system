@@ -59,3 +59,11 @@ export class ForgetPasswordDTO {
   @IsNotEmpty()
   email: string;
 }
+
+export class UserEmailDTO {
+  @ApiProperty()
+  @IsString()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
