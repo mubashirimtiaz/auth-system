@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Post,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -13,6 +15,7 @@ import {
   UpdateForgetPasswordDTO,
   UpdatePasswordDTO,
   UpdateProfileDTO,
+  UserEmailDTO,
 } from './dto/user.dto';
 import { ForgetPasswordInterceptor } from './interceptor/forget-password.interceptor';
 import { UserService } from './user.service';
@@ -111,5 +114,10 @@ export class UserController {
     @DECORATORS.general.params.Payload('meta') payload: JwtTOKEN,
   ) {
     return this.userService.verifyEmailResend(payload);
+  }
+
+  @Delete('delete-user')
+  deleteUser(@Query() query: UserEmailDTO) {
+    return this.userService.deleteUser(query.email);
   }
 }
