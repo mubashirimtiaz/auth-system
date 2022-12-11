@@ -346,7 +346,7 @@ export class AuthService {
     await this.mailService.sendMail(
       user?.email,
       { name: user?.name, url },
-      'FUMA! Verify Email',
+      'MY APP! Verify Email',
       './verify-email',
     );
     return ApiSuccessResponse<Token>(
