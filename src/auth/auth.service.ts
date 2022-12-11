@@ -73,6 +73,7 @@ export class AuthService {
         email,
         providerName: OAUTH_PROVIDER.EMAIL_PASSWORD,
         password,
+        verified: true, //TODO:SHOULD BE FALSE/REMOVED
       });
 
       const payload = {
@@ -80,7 +81,6 @@ export class AuthService {
         sub: user.id,
         name: user.name,
       };
-      console.log(user);
 
       if (!user?.emailVerified) {
         return this.sendVerifyEmail(user, payload);

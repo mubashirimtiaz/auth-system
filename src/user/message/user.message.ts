@@ -9,6 +9,7 @@ export const USER_MESSAGE = {
     USER_EMAIL_VERIFIED: 'User email verified successfully',
     FORGET_PASSWORD_TOKEN_VERIFIED:
       'Forget password token verified successfully',
+    USER_DELETED: 'User deleted successfully',
   },
   //ERROR
   error: {

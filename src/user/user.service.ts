@@ -79,8 +79,6 @@ export class UserService {
     credential: UpdatePasswordDTO,
     user: User,
   ): Promise<ApiResponse<null | AuthToken>> {
-    console.log(credential, user);
-
     try {
       return await this.passwordLookup(
         credential,
@@ -279,6 +277,49 @@ export class UserService {
     return this.authService.sendVerifyEmail(userData, payload);
   }
 
+  async deleteUser(email: string): Promise<ApiResponse<unknown>> {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!user) {
+        throwApiErrorResponse({
+          response: {
+            message: USER_MESSAGE.error.USER_NOT_FOUND,
+            success: false,
+          },
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      const deletedCode = this.prismaService.code.deleteMany({
+        where: { userId: user.id },
+      });
+
+      const deletedOAuthProvider = this.prismaService.oAuthProvider.deleteMany({
+        where: { userId: user.id },
+      });
+
+      const deletedUser = this.prismaService.user.deleteMany({
+        where: { email },
+      });
+
+      await this.prismaService.$transaction([
+        deletedCode,
+        deletedOAuthProvider,
+        deletedUser,
+      ]);
+
+      return ApiSuccessResponse(true, USER_MESSAGE.success.USER_DELETED);
+    } catch (error) {
+      throwApiErrorResponse(error);
+    }
+  }
+
   private async passwordLookup(
     credential: {
       oldPassword?: string;
@@ -308,7 +349,6 @@ export class UserService {
           });
         }
       }
-      console.log('user', user);
 
       await this.prismaService.user.update({
         where: { email: user?.email },
