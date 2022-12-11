@@ -3,7 +3,7 @@ name: Deploy IMAGE to DOCKERHUB
 on:
   push:
     branches:
-      - main
+      - release-test
 
 jobs:
   deploy:
