@@ -1,6 +1,5 @@
 import { AUTH_MESSAGE } from 'src/auth/message/auth.message';
-import { SES_MESSAGE } from 'src/aws/ses/message/ses.message';
-import { MQTT_MESSAGE } from 'src/mqtt/message/mqtt.message';
+import { MAIL_MESSAGE } from 'src/mail/message/mail.message';
 import { USER_MESSAGE } from 'src/user/message/user.message';
 export const MESSAGE = {
   //AUTH
@@ -8,9 +7,7 @@ export const MESSAGE = {
   //USER
   user: USER_MESSAGE,
   //MAIL
-  mail: SES_MESSAGE,
-  //MQTT
-  mqtt: MQTT_MESSAGE,
+  mail: MAIL_MESSAGE,
   //GENERAL
   general: {
     //SUCCESS
@@ -24,6 +21,7 @@ export const MESSAGE = {
       CODE_INVALID: 'Invalid code',
       MISSING_CODE: 'Missing code',
       INVALID_AWS_MQTT_IOT_SIGNATURE_TOKEN: 'Invalid signature token',
+      UNIQUE_CONSTRAINT_FAILED: 'Unique constraint failed',
     },
   },
   //SERVER

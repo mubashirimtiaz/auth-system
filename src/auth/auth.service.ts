@@ -2,7 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
-import { OAUTH_PROVIDER } from '@prisma/client';
 import { JwtTOKEN } from './interface/auth.interface';
 import { User } from 'src/common/interfaces';
 import { SignInDTO, SignUpDTO } from './dto/auth.dto';
@@ -18,33 +17,18 @@ import { ApiResponse } from 'src/common/interfaces';
 import { AUTH_MESSAGE } from './message/auth.message';
 import { MESSAGE } from 'src/common/messages';
 import { Token } from 'src/common/types';
-import { SesService } from 'src/aws/ses/ses.service';
 import { ConfigService } from '@nestjs/config';
+import { MailService } from 'src/mail/mail.service';
+import { OAUTH_PROVIDER } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prismaService: PrismaService,
     private jwtService: JwtService,
-    private sesService: SesService,
     private configService: ConfigService,
+    private mailService: MailService,
   ) {}
-
-  oauthRedirect(user: User): string {
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      name: user.name,
-    };
-
-    const code = this.jwtService.sign(payload, {
-      secret:
-        process.env.VERIFY_OAUTH_SECRET + user.code.registration?.value || '',
-      expiresIn: process.env.VERIFY_OAUTH_EXPIRATION_TIME,
-    });
-    const url = `${this.configService.get('WEB_URL')}/verify/code?code=${code}`;
-    return url;
-  }
 
   async login(payload: User): Promise<ApiResponse<AuthToken>> {
     if (!payload.emailVerified) {
@@ -79,19 +63,25 @@ export class AuthService {
   }
 
   async signup({
+    name,
     email,
     password,
-    name,
   }: SignUpDTO): Promise<ApiResponse<AuthToken | Token>> {
     try {
       const user = await this.validateUserWithOAuth({
-        email,
         name,
-        password,
+        email,
         providerName: OAUTH_PROVIDER.EMAIL_PASSWORD,
+        password,
       });
 
-      const payload = { email: user.email, sub: user.id, name: user.name };
+      const payload = {
+        email: user.email,
+        sub: user.id,
+        name: user.name,
+      };
+      console.log(user);
+
       if (!user?.emailVerified) {
         return this.sendVerifyEmail(user, payload);
       }
@@ -112,6 +102,22 @@ export class AuthService {
     } catch (error) {
       throwApiErrorResponse(error);
     }
+  }
+
+  oauthRedirect(user: User): string {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      name: user.name,
+    };
+
+    const code = this.jwtService.sign(payload, {
+      secret:
+        process.env.VERIFY_OAUTH_SECRET + user.code.registration?.value || '',
+      expiresIn: process.env.VERIFY_OAUTH_EXPIRATION_TIME,
+    });
+    const url = `${this.configService.get('WEB_URL')}/verify/code?code=${code}`;
+    return url;
   }
 
   refreshAccessToken(user: User): ApiResponse<AuthToken> {
@@ -196,7 +202,7 @@ export class AuthService {
     email,
     password = null,
     providerId = null,
-    name,
+    name = 'USER',
     picture,
     providerName,
     verified,
@@ -264,7 +270,6 @@ export class AuthService {
               select: {
                 registration: true,
                 emailVerification: true,
-                refresh: true,
                 forgetPassword: true,
               },
             },
@@ -315,7 +320,6 @@ export class AuthService {
             select: {
               registration: true,
               emailVerification: true,
-              refresh: true,
               forgetPassword: true,
             },
           },
@@ -339,21 +343,11 @@ export class AuthService {
     const url = `${this.configService.get('WEB_URL')}/verify/email?code=${
       user?.code?.emailVerification?.value
     }&token=${token}`;
-    await this.sesService.sendMail(
+    await this.mailService.sendMail(
       user?.email,
       { name: user?.name, url },
       'FUMA! Verify Email',
-      `<p>Hey ${user?.name},</p>
-      <h2>Verify your email</h2>
-      <p>Please click below to verify your email</p>
-      <p>
-        <a href=${url}>Verify EMAIL</a>
-      </p>
-      <p>CODE:
-        <kbd>${user?.code?.emailVerification?.value}</kbd>
-      </p>
-      
-      <p>If you did not request this email you can safely ignore it.</p>`,
+      './verify-email',
     );
     return ApiSuccessResponse<Token>(
       true,
@@ -361,6 +355,7 @@ export class AuthService {
       { token },
     );
   }
+
   async findUniqueUser(query: {
     [key: string]: string | number;
   }): Promise<User> {
@@ -376,7 +371,6 @@ export class AuthService {
           select: {
             registration: true,
             emailVerification: true,
-            refresh: true,
             forgetPassword: true,
           },
         },
@@ -385,7 +379,7 @@ export class AuthService {
     return user;
   }
 
-  getAccessToken(payload: Partial<JwtTOKEN>): string {
+  getAccessToken(payload: JwtTOKEN): string {
     const accessToken: string = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_TOKEN_SECRET,
       expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
@@ -393,7 +387,7 @@ export class AuthService {
     return accessToken;
   }
 
-  getRefreshToken(payload: Partial<JwtTOKEN>): string {
+  getRefreshToken(payload: JwtTOKEN): string {
     const refreshToken: string = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_TOKEN_SECRET,
       expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME,

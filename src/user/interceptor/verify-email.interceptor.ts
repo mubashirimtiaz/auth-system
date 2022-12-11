@@ -45,6 +45,9 @@ export class VerifyEmailInterceptor implements NestInterceptor {
         payload,
         StrategyType.JWT,
       );
+      console.log(user);
+
+      console.log(user?.code?.emailVerification?.value, code);
 
       if (user?.code?.emailVerification?.value !== code) {
         throwApiErrorResponse({

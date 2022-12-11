@@ -22,7 +22,7 @@ export const USER_MESSAGE = {
     USER_INVALID_PASSWORD_SCHEMA:
       'Password must contain at least 1 uppercase, 1 lowercase, 1 number and 1 special character',
     USER_INVALID_EMAIL: 'Invalid email',
-    USER_EMAIL_NOT_VERIFIED: 'Email is not verified',
+    USER_EMAIL_NOT_VERIFIED: 'Email is not verified, Please verify your email',
     USER_INVALID_NAME: 'name must contain only letters (a-zA-Z)',
     USER_MISSING_PASSWORD: (...params) =>
       `This account can only be logged into with ${params}. Or by resetting the password with "Forgot Password".`,

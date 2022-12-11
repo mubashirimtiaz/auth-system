@@ -18,11 +18,15 @@ export class TransformResInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((res) => {
         if (res?.data?.user) {
-          removeExtraProperties(res.data?.user, ['hash', 'code']);
+          removeExtraProperties(res.data?.user, [
+            'hash',
+            'code',
+            'emailVerified',
+          ]);
           return res;
         }
         if (res?.data) {
-          removeExtraProperties(res.data, ['hash', 'code']);
+          removeExtraProperties(res.data, ['hash', 'code', 'emailVerified']);
           return res;
         }
         return res;

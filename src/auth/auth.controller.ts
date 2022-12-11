@@ -8,23 +8,18 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { User } from 'src/common/interfaces';
 import { AuthService } from './auth.service';
-import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt-refresh-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenDTO, SignInDTO, SignUpDTO } from './dto/auth.dto';
 import DECORATORS from 'src/common/decorators';
-import { GithubAuthGuard } from './guards/github-auth.guard';
-import { MicrosoftAuthGuard } from './guards/microsoft-auth.guard';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { Response } from 'express';
 import { VerifyOauthTokenInterceptor } from './interceptor/verify-oauth-token.interceptor';
-import { ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Auth')
-@ApiHeader({
-  name: 'x-signature-token',
-})
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -69,35 +64,6 @@ export class AuthController {
     res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
   }
 
-  @Get('github')
-  @UseGuards(GithubAuthGuard)
-  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-  async githubAuth(@DECORATORS.general.params.Payload('user') user: User) {}
-
-  @Get('github/redirect')
-  @UseGuards(GithubAuthGuard)
-  githubAuthRedirect(
-    @DECORATORS.general.params.Payload('user') user: User,
-    @Res() res: Response,
-  ) {
-    const link = this.authService.oauthRedirect(user);
-    res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
-  }
-
-  @Get('microsoft')
-  @UseGuards(MicrosoftAuthGuard)
-  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-  async microsoftAuth(@DECORATORS.general.params.Payload('user') user: User) {}
-
-  @Get('microsoft/redirect')
-  @UseGuards(MicrosoftAuthGuard)
-  microsoftAuthRedirect(
-    @DECORATORS.general.params.Payload('user') user: User,
-    @Res() res: Response,
-  ) {
-    const link = this.authService.oauthRedirect(user);
-    res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
-  }
   @ApiQuery({ name: 'code', required: true })
   @Get('verify-oauth-code')
   @UseInterceptors(VerifyOauthTokenInterceptor)

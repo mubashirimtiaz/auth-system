@@ -19,10 +19,10 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from 'src/common/types';
-import { SesService } from 'src/aws/ses/ses.service';
 import { AuthToken, PASSWORD_CHANGE_TYPE } from './type/user.type';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from 'src/auth/auth.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UserService {
@@ -30,7 +30,7 @@ export class UserService {
     private readonly prismaService: PrismaService,
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
-    private readonly sesService: SesService,
+    private readonly mailService: MailService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -79,6 +79,8 @@ export class UserService {
     credential: UpdatePasswordDTO,
     user: User,
   ): Promise<ApiResponse<null | AuthToken>> {
+    console.log(credential, user);
+
     try {
       return await this.passwordLookup(
         credential,
@@ -146,25 +148,18 @@ export class UserService {
       )}/verify/forget-password?code=${
         forgetPasswordCode?.value
       }&token=${token}`;
-      await this.sesService.sendMail(
+      await this.mailService.sendMail(
         payload?.email,
         {
           url,
           name: payload?.name,
         },
         'FUMA! Forget your password?',
-        `<p>Hey ${payload?.name},</p>
-        <h2>Forget Password?</h2>
-        <p>Please click below to change your password</p>
-        <p>
-          <a href=${url}>Change Password</a>
-        </p>
-
-        <p>If you did not request this email you can safely ignore it.</p>`,
+        './forget-password',
       );
       return ApiSuccessResponse<Token>(
         true,
-        MESSAGE.mail.success.FORGET_PASSWORD_MAIL_SENT,
+        MESSAGE.mail.success.FORGET_PASSWORD_EMAIL_SENT,
         { token },
       );
     } catch (error) {
@@ -313,19 +308,22 @@ export class UserService {
           });
         }
       }
+      console.log('user', user);
 
       await this.prismaService.user.update({
         where: { email: user?.email },
         data: {
           hash: credential.newPassword,
           updatedAt: new Date(),
-          code: {
-            update: {
-              forgetPassword: {
-                unset: true,
+          ...(type === PASSWORD_CHANGE_TYPE.FORGET && {
+            code: {
+              update: {
+                forgetPassword: {
+                  unset: true,
+                },
               },
             },
-          },
+          }),
         },
       });
 
