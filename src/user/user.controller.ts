@@ -19,15 +19,12 @@ import { UserService } from './user.service';
 import { MESSAGE } from 'src/common/messages';
 import { User } from './interface/user.interface';
 import { VerifyEmailInterceptor } from './interceptor/verify-email.interceptor';
-import { ApiBearerAuth, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { DecodeJWTCodeInterceptor } from 'src/common/interceptors';
 import DECORATORS from 'src/common/decorators';
 import { JwtTOKEN } from 'src/common/interfaces';
 
 @ApiTags('User')
-@ApiHeader({
-  name: 'x-signature-token',
-})
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -63,13 +60,13 @@ export class UserController {
     return this.userService.updatePassword(body, user);
   }
 
-  @Post('forget-password/send-email')
+  @Post('forgot-password/send-email')
   forgetPasswordEmailSend(@Body() { email }: ForgetPasswordDTO) {
     return this.userService.forgetPassword({ email });
   }
 
   @ApiQuery({ name: 'token', required: true })
-  @Get('forget-password/resend-email')
+  @Get('forgot-password/resend-email')
   @UseInterceptors(DecodeJWTCodeInterceptor)
   forgetPasswordEmailResend(
     @DECORATORS.general.params.Payload('meta') payload: JwtTOKEN,
@@ -79,7 +76,7 @@ export class UserController {
 
   @ApiQuery({ name: 'token', required: true })
   @ApiQuery({ name: 'code', required: true })
-  @Get('forget-password/verify')
+  @Get('forgot-password/verify')
   @UseInterceptors(ForgetPasswordInterceptor)
   verifyForgetPassword() {
     return ApiSuccessResponse(
@@ -90,7 +87,7 @@ export class UserController {
 
   @ApiQuery({ name: 'token', required: true })
   @ApiQuery({ name: 'code', required: true })
-  @Post('forget-password/reset')
+  @Post('forgot-password/reset')
   @UseInterceptors(ForgetPasswordInterceptor)
   updateForgetPassword(
     @DECORATORS.general.params.Payload('user') user: User,

@@ -19,8 +19,8 @@ async function bootstrap() {
     }),
   );
   const config = new DocumentBuilder()
-    .setTitle('FUMA API')
-    .setDescription('FUMA API description')
+    .setTitle('AUTH SYSTEM API')
+    .setDescription('AUTH SYSTEM API description')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

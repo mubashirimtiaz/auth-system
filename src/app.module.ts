@@ -1,48 +1,41 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { AwsModule } from './aws/aws.module';
 import { ConfigModule } from '@nestjs/config';
-import { OrganizationModule } from './organization/organization.module';
-import { MqttModule } from './mqtt/mqtt.module';
+import { MailService } from './mail/mail.service';
+import { MailModule } from './mail/mail.module';
+import { OpenaiModule } from './openai/openai.module';
 import configuration from 'config/configuration';
-import { VerifySignatureMiddleware } from './common/middlewares';
-import { AuthController } from './auth/auth.controller';
-import { UserController } from './user/user.controller';
-import { OrganizationController } from './organization/organization.controller';
-import { ServiceModule } from './service/service.module';
-import { ServiceController } from './service/service.controller';
+import { ThrottlerModule } from '@nestjs/throttler';
 @Module({
   imports: [
     ConfigModule.forRoot({
       load: [configuration],
       isGlobal: true,
     }),
-    PrismaModule,
+    ThrottlerModule.forRoot({
+      ttl: 60,
+      limit: 10,
+    }),
     AuthModule,
     UserModule,
     PrismaModule,
-    AwsModule,
-    OrganizationModule,
-    MqttModule,
-    ServiceModule,
+    MailModule,
+    OpenaiModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, MailService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(VerifySignatureMiddleware)
-      .exclude('(.*)/auth/(.*)/redirect')
-      .forRoutes(
-        AuthController,
-        UserController,
-        OrganizationController,
-        ServiceController,
-      );
-  }
-}
+export class AppModule {}
+
+// export class AppModule implements NestModule {
+//   configure(consumer: MiddlewareConsumer) {
+//     consumer
+//       .apply(VerifySignatureMiddleware)
+//       .exclude('(.*)/auth/(.*)/redirect')
+//       .forRoutes(AuthController, UserController, OrganizationController);
+//   }
+// }

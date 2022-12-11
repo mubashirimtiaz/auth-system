@@ -6,27 +6,21 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { AuthController } from './auth.controller';
-import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { JwtForgetPasswordStrategy } from './strategies/forget-password.strategy';
-import { AwsModule } from 'src/aws/aws.module';
-import { GithubStrategy } from './strategies/github-strategy';
-import { MicrosoftStrategy } from './strategies/microsoft.strategy';
+import { MailModule } from 'src/mail/mail.module';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   providers: [
     AuthService,
     LocalStrategy,
     JwtStrategy,
-    GoogleStrategy,
     JwtRefreshStrategy,
-    JwtForgetPasswordStrategy,
-    GithubStrategy,
-    MicrosoftStrategy,
+    GoogleStrategy,
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
   ],
-  imports: [PrismaModule, PassportModule, JwtModule, AwsModule],
+  imports: [PrismaModule, PassportModule, JwtModule, MailModule],
   exports: [AuthService],
   controllers: [AuthController],
 })
