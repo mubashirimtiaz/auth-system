@@ -1,13 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Max,
-} from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsString, Max, Min } from 'class-validator';
 import { IMG_SIZE } from '../enum/openai.enum';
 
 export class ImgGenDTO {
@@ -17,11 +9,10 @@ export class ImgGenDTO {
   prompt: string;
 
   @ApiProperty()
-  @IsOptional()
   @IsInt()
   @Max(3)
-  @IsNumber()
-  n = 1;
+  @Min(1)
+  n: number;
 
   @ApiProperty()
   @IsString()
