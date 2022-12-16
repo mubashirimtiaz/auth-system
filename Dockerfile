@@ -1,6 +1,6 @@
 #Build stage
 
-FROM node:18-alpine AS builder
+FROM node:18.12.1 AS builder
 
 # Create app directory
 WORKDIR /app
@@ -19,7 +19,7 @@ RUN npm run build
 #Run stage
 
 
-FROM node:18-alpine
+FROM node:18.12.1
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
