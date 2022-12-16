@@ -19,7 +19,7 @@ RUN npm run build
 #Run stage
 
 
-FROM node:18.12.1
+FROM node:18-alpine
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
