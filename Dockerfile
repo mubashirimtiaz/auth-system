@@ -1,6 +1,6 @@
 #Build stage
 
-FROM node:16-bullseye-slim AS builder
+FROM node:18-alpine AS builder
 
 # Create app directory
 WORKDIR /app
@@ -13,8 +13,6 @@ COPY prisma ./prisma/
 RUN npm install
 
 COPY . .
-
-RUN npx prisma generate
 
 RUN npm run build
 
