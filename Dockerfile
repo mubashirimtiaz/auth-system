@@ -1,6 +1,6 @@
 #Build stage
 
-FROM node:18-alpine AS builder
+FROM node:16-bullseye-slim AS builder
 
 # Create app directory
 WORKDIR /app
